@@ -9,9 +9,10 @@ import java.util.ArrayList;
 
 public class PCB {
 	
-// Global variables	
+
+	// Global variables
 	private int jobID;
-	private int jobSize; // memory required for job
+	private int jobSize; // memory required for job (in bytes)
 	
 	private ArrayList<Integer> totalPredBursts;		// the burst length for each predicted job
 	private int curBurst;		// current burst length
@@ -24,13 +25,30 @@ public class PCB {
 	private int cpuShots;       // number of shots the job gets at the cpu	
 	private int subQ = 1;       //current subqueue, initially in subQ1
 	private int subQTurns = 3;  //turns spent in given subqueue;
-	
-//  ---Constructor---
+
+
+// -- Phase 2 Addition --
+
+	private int programCounter;
+	private int jobSizeInPages;
+	private int pageTableBaseAddress;
+	private int numberOfPageFaults;
+	private int numberOfReplacements;
+	private PageTable pageTable;
+	private boolean normalTermination = true;
+	private String referenceString;
+	private int cleanPageReplacements;
+	private int dirtyPageReplacements;
+
+
+
+	//  ---Constructor---
 	public PCB(int id, int size, int cBurst, ArrayList<Integer> bursts){
 		jobID = id;
 		jobSize = size;	
 		totalPredBursts = bursts;
 		curBurst = cBurst;
+
 	}
 
 //		---Object Functions---
@@ -174,5 +192,82 @@ public class PCB {
 	public int getCPUShots(){
 		return cpuShots;
 	}
+
+	public int getProgramCounter() {
+		return programCounter;
+	}
+
+	public int getJobSizeInPages() {
+		return jobSizeInPages;
+	}
+
+	public int getPageTableBaseAddress() {
+		return pageTableBaseAddress;
+	}
+
+	public int getNumberOfPageFaults() {
+		return numberOfPageFaults;
+	}
+
+	public int getNumberOfReplacements() {
+		return numberOfReplacements;
+	}
+
+	public void setProgramCounter(int programCounter) {
+		this.programCounter = programCounter;
+	}
+
+	public void setJobSizeInPages(int jobSizeInPages) {
+		this.jobSizeInPages = jobSizeInPages;
+	}
+
+	public void setPageTableBaseAddress(int pageTableBaseAddress) {
+		this.pageTableBaseAddress = pageTableBaseAddress;
+	}
+
+	public void incrNumberOfPageFaults() {
+		this.numberOfPageFaults++;
+	}
+
+	public void incrNumberOfReplacements() {
+		this.numberOfReplacements++;
+	}
+
+	public boolean isNormalTermination() {
+		return normalTermination;
+	}
+
+	public void setNormalTermination(boolean normalTermination) {
+		this.normalTermination = normalTermination;
+	}
+
+	public String getReferenceString() {
+		return referenceString;
+	}
+
+	public void setReferenceString(String referenceString) {
+		this.referenceString = referenceString;
+	}
+
+	public int getCleanPageReplacements() {
+		return cleanPageReplacements;
+	}
+
+	public void setCleanPageReplacements(int cleanPageReplacements) {
+		this.cleanPageReplacements = cleanPageReplacements;
+	}
+
+	public int getDirtyPageReplacements() {
+		return dirtyPageReplacements;
+	}
+
+	public void setDirtyPageReplacements(int dirtyPageReplacements) {
+		this.dirtyPageReplacements = dirtyPageReplacements;
+	}
+
+	public PageTable getPageTable() {
+		return pageTable;
+	}
 }
+
 
