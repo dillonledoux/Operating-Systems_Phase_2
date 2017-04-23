@@ -15,10 +15,12 @@ public class Loader{
 	
 //		---Class Variables---
 	
-	private  File jobFile;
-	private Scanner scanner;	
+	private File arrivals;
+	private File jbX;
+	private Scanner scannerArrivals;
+	private Scanner scannerJbX;
 	private boolean moreJobsInFile = true;	
-	private ArrayList<ArrayList<Integer>> jobQ = new ArrayList<ArrayList<Integer>>(); 
+	private ArrayList<ArrayList<String>> jobQ = new ArrayList<ArrayList<String>>();
 		
 	SYSTEM system;
 	Mem_manager mem_manager;
@@ -29,19 +31,19 @@ public class Loader{
 	    system = systemIn;
 	    mem_manager = mem_managerIn;
 	    scheduler = schedulerIn;
-	    jobFile = new File(strIn);
+	    arrivals = new File(strIn);
 	    try{
-	    	scanner = new Scanner(jobFile);
+	    	scannerArrivals = new Scanner(arrivals);
 	    }
 	    catch(Exception e){
-	    	System.out.println("Could not load form Job File");
+	    	System.out.println("Could not load form Arrivals File");
 	    	System.exit(1);
 	    }
 	}
 	
 //		---Object Methods---     
 	
-    public void addToJobQ(ArrayList<Integer> job){
+    public void addToJobQ(ArrayList<String> job){
      	jobQ.add(job);
     }
     /**
@@ -52,26 +54,23 @@ public class Loader{
      * integer and it gets returned.
      *
      */
-    public ArrayList<Integer> getNextJob(){
-    	if(scanner.hasNextLine() == false){
+    public ArrayList<String> getNextJob(){
+    	if(scannerArrivals.hasNextLine() == false){
     		moreJobsInFile = false;
-    		ArrayList<Integer> list = new ArrayList<>();
-    		list.add(0);
+    		ArrayList<String> list = new ArrayList<>();
+    		list.add("0");
     		return list;
     	}
-    	String line = scanner.nextLine(); 	
+    	String line = scannerArrivals.nextLine();
         ArrayList<String> stringList = new ArrayList<>(Arrays.asList(line.split("\\W+")));
         try{
         	Integer.parseInt(stringList.get(0));
         }
         catch(Exception e){
         	stringList.remove(0);
-        }       
-        ArrayList<Integer> jobInfo = new ArrayList<>();
-        for(String s: stringList){
-        	jobInfo.add(Integer.valueOf(s));
         }
-        return jobInfo;   
+
+        return stringList;
      }
    
     /**
@@ -83,7 +82,7 @@ public class Loader{
     	boolean canAllocate; 
     	while(system.getFreeMemory()>=mem_manager.getMemCutoff()  
     		&& scheduler.getTotalPCBs()<15 && index<jobQ.size()){   		
-    		canAllocate = mem_manager.allocate(jobQ.get(index).get(1));  			
+    		canAllocate = mem_manager.allocate(Integer.parseInt(jobQ.get(index).get(1)));
     		if(canAllocate){
     			scheduler.setup(jobQ.remove(index));
     		}
@@ -99,12 +98,12 @@ public class Loader{
     public void loadTasks(){
     	loadFromJobQ();
     	boolean canAllocate;
-    	ArrayList<Integer> newJob;   	
+    	ArrayList<String> newJob;
     	while(system.getFreeMemory()>=mem_manager.getMemCutoff() && scheduler.getTotalPCBs()<15
     			&& moreJobsInFile ){
     		newJob = getNextJob();
-    		if(newJob.get(0) != 0){
-    			canAllocate = mem_manager.allocate(newJob.get(1));
+    		if(!newJob.get(0).equals("0")){
+    			canAllocate = mem_manager.allocate(Integer.parseInt(newJob.get(1)));
     			if(canAllocate){
     				scheduler.setup(newJob);    				
     			}
@@ -117,12 +116,32 @@ public class Loader{
     		}
     	}
     }
+
+    public ArrayList<ReferenceStringEntry> constructReferenceString(String address){
+		jbX = new File(address);
+		try{
+			scannerJbX = new Scanner(jbX);
+		}
+		catch(Exception e){
+			System.out.println("Could not load from jb" +address);
+			System.exit(1);
+		}
+		ArrayList<ReferenceStringEntry> list = new ArrayList<>();
+		while(scannerJbX.hasNextLine()){
+			String line = scannerJbX.nextLine();
+			list.add(new ReferenceStringEntry(line));
+		}
+		return list;
+	}
+
+
+
    
 //		---Getters---
     public boolean hasMoreJobsInFile(){
         return moreJobsInFile;
      }
-    public ArrayList<ArrayList<Integer>> getJobQ(){
+    public ArrayList<ArrayList<String>> getJobQ(){
     	return jobQ;
     }
     public int getJobQSize(){

@@ -37,7 +37,7 @@ public class Scheduler {
      *  Sets up a new PCB given an ArrayList with job information
      *  and adds the newly created PCB into the readyQ
      */
-	public void setup(ArrayList<Integer> list){    
+	public void setup(ArrayList<String> list){
 	    PCB job = createPCB(list);
 		job.setArrivalTime(system.getClk());
 		addToReadyQ(job);
@@ -120,12 +120,11 @@ public class Scheduler {
     	}    		
     }
     //Constructs the PCB object from an ArrayList
-    public PCB createPCB(ArrayList<Integer> list){
-        ArrayList<Integer> info = list;
-	    int jID = info.remove(0);
-	    int jSize = info.remove(0);
-	    int cBurst = info.remove(0);
-        PCB pcb = new PCB(jID, jSize, cBurst, info); // adding job id and size
+    public PCB createPCB(ArrayList<String> list){
+	    int jID = Integer.parseInt(list.remove(0));
+	    int jSize = Integer.parseInt(list.remove(0));
+		String programCounter = list.remove(0);
+        PCB pcb = new PCB(jID, jSize, cBurst, list); // adding job id and size
 	    return pcb;
     }
         

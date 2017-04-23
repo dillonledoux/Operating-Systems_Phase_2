@@ -111,7 +111,7 @@ public class SYSTEM {
      public void incrSysClock(int value){
      	for(int i = 1; i<=value; i++){
      		CLOCK++;
-     		if(CLOCK % WRITE_EVERY == 0){
+     		if(CLOCK % WRITE_EVERY == 200){
      			logger.writeToSysLog();
      		}
      	}

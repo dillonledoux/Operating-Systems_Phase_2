@@ -13,10 +13,7 @@ public class PCB {
 	// Global variables
 	private int jobID;
 	private int jobSize; // memory required for job (in bytes)
-	
-	private ArrayList<Integer> totalPredBursts;		// the burst length for each predicted job
-	private int curBurst;		// current burst length
-	
+
 	private int timeArrival;	// time job entered the system
 	private int timeDelivered;  // time job terminated
 	private int timeUsed;		// cumulative CPU time used by the job
@@ -29,25 +26,37 @@ public class PCB {
 
 // -- Phase 2 Addition --
 
-	private int programCounter;
+	private String programCounter;
 	private int jobSizeInPages;
 	private int pageTableBaseAddress;
 	private int numberOfPageFaults;
 	private int numberOfReplacements;
-	private PageTable pageTable;
+	private PTEntry[] pageTable;
 	private boolean normalTermination = true;
-	private String referenceString;
 	private int cleanPageReplacements;
 	private int dirtyPageReplacements;
+	private ArrayList<ReferenceStringEntry> referenceString;
 
 
 
 	//  ---Constructor---
-	public PCB(int id, int size, int cBurst, ArrayList<Integer> bursts){
+	public PCB(int id, int size, String counter){
 		jobID = id;
 		jobSize = size;	
-		totalPredBursts = bursts;
-		curBurst = cBurst;
+		programCounter = counter;
+
+		// populates the page table with empty entries
+		int entries = 0;
+		while(entries<128){
+			pageTable[entries] = new PTEntry();
+			entries++;
+		}
+
+
+
+
+
+
 
 	}
 
@@ -84,9 +93,7 @@ public class PCB {
 	public void setTimeFinishIO(int clkIn){
 		timeFinishIO = clkIn+10;
 	}
-	public void setCurBurst(int number){
-		curBurst = number;
-	}
+
 	public void setArrivalTime(int time){
 		timeArrival = time;
 	}
@@ -100,27 +107,18 @@ public class PCB {
 	    subQ = number;
 	}
 
-	public boolean hasMoreBursts(){
-		if(totalPredBursts.isEmpty()){
-			return false;
-		}
-		return true;
-	}
+
 	public int getTimeFinishIO(){
 		return timeFinishIO;
 	}
-	public ArrayList<Integer> getTotalPredBursts(){
-		return totalPredBursts;
-	}
+
 	public int getJobID(){
 		return jobID;
 	}
 	public int getJobSize(){
 		return jobSize;
 	}
-	public int getCurBurst(){
-		return curBurst;
-	}
+
 	public int getTimeArrival(){
 		return timeArrival;
 	}
@@ -156,9 +154,7 @@ public class PCB {
 	public void incrIoRequests(){
 	    IoReq++;
 	}
-    public void advanceCurBurst(){
-    	curBurst = totalPredBursts.remove(0);
-    }   
+
     public void incrementTurns(){
 	    subQTurns++;
 	}
@@ -193,7 +189,7 @@ public class PCB {
 		return cpuShots;
 	}
 
-	public int getProgramCounter() {
+	public String getProgramCounter() {
 		return programCounter;
 	}
 
@@ -213,7 +209,7 @@ public class PCB {
 		return numberOfReplacements;
 	}
 
-	public void setProgramCounter(int programCounter) {
+	public void setProgramCounter(String programCounter) {
 		this.programCounter = programCounter;
 	}
 
@@ -241,11 +237,11 @@ public class PCB {
 		this.normalTermination = normalTermination;
 	}
 
-	public String getReferenceString() {
+	public ArrayList<ReferenceStringEntry> getReferenceString() {
 		return referenceString;
 	}
 
-	public void setReferenceString(String referenceString) {
+	public void setReferenceString(ArrayList<ReferenceStringEntry> referenceString) {
 		this.referenceString = referenceString;
 	}
 
@@ -265,7 +261,7 @@ public class PCB {
 		this.dirtyPageReplacements = dirtyPageReplacements;
 	}
 
-	public PageTable getPageTable() {
+	public PTEntry[] getPageTable() {
 		return pageTable;
 	}
 }
