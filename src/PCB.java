@@ -8,51 +8,44 @@
 import java.util.ArrayList;
 
 public class PCB {
-	
 
 	// Global variables
 	private int jobID;
 	private int jobSize; // memory required for job (in bytes)
-
 	private int timeArrival;	// time job entered the system
 	private int timeDelivered;  // time job terminated
 	private int timeUsed;		// cumulative CPU time used by the job
 	private int timeFinishIO;	// time the job will finish an IO request
 	private int IoReq;          // number of I/O requests
-	private int cpuShots;       // number of shots the job gets at the cpu	
 	private int subQ = 1;       //current subqueue, initially in subQ1
 	private int subQTurns = 3;  //turns spent in given subqueue;
 
-
 // -- Phase 2 Addition --
-
-	private String programCounter;
+	private int programCounter;
 	private int jobSizeInPages;
 	private int pageTableBaseAddress;
 	private int numberOfPageFaults;
 	private int numberOfReplacements;
-	private PTEntry[] pageTable;
+
 	private boolean normalTermination = true;
 	private int cleanPageReplacements;
 	private int dirtyPageReplacements;
-	private ArrayList<ReferenceStringEntry> referenceString;
+	private boolean quantumExpired = false;
+	private  ArrayList<ReferenceStringEntry>
+			referenceString = new ArrayList<ReferenceStringEntry>();
 
+// todo be able to track the max amount of pages that can be allocated to a job
 
-
-	//  ---Constructor---
-	public PCB(int id, int size, String counter){
+//	todo trck the number of frames actually allocated to a specific job
+	//  --- Constructor ---
+	public PCB(int id, int size, int counter, ArrayList<ReferenceStringEntry>
+			refString){
 		jobID = id;
 		jobSize = size;	
 		programCounter = counter;
+		referenceString = refString;
 
 		// populates the page table with empty entries
-		int entries = 0;
-		while(entries<128){
-			pageTable[entries] = new PTEntry();
-			entries++;
-		}
-
-
 
 
 
@@ -61,16 +54,6 @@ public class PCB {
 	}
 
 //		---Object Functions---
-    /**
-     * Returns a String containing information collected about the job
-     * to send to the logger at the appropriate call
-     */
-	public String jobStats(){
-        String stats;
-        stats = String.format("%-3d    |  %-5d  |    %-5d    |    %-4d   |  %-2d   |", 
-        		jobID, timeArrival, timeDelivered, ((IoReq*10)+timeUsed), cpuShots);       
-        return stats;
-    }
 	/**
 	 * Assigns the appropriate number of turns based
 	 * on the number supplied which represents the
@@ -91,22 +74,20 @@ public class PCB {
     	
 //		---Setters and Getters---
 	public void setTimeFinishIO(int clkIn){
-		timeFinishIO = clkIn+10;
+		timeFinishIO = clkIn+12;
 	}
 
 	public void setArrivalTime(int time){
 		timeArrival = time;
 	}
+
 	public void setTimeDelivered(int time){
 		timeDelivered = time;
 	}
-	public void setTimeUsed(int time){
-		timeUsed = time;
-	}
+
 	public void setSubQ(int number){
 	    subQ = number;
 	}
-
 
 	public int getTimeFinishIO(){
 		return timeFinishIO;
@@ -115,6 +96,7 @@ public class PCB {
 	public int getJobID(){
 		return jobID;
 	}
+
 	public int getJobSize(){
 		return jobSize;
 	}
@@ -122,9 +104,7 @@ public class PCB {
 	public int getTimeArrival(){
 		return timeArrival;
 	}
-	public int getTimeUsed(){
-		return timeUsed;
-	}
+
 	/**
 	 * Returns the appropriate time quantum derived from
 	 * the subQ which the job currently resides
@@ -143,10 +123,12 @@ public class PCB {
 	        return 40;
 	    }
 	}
+
 	public int getTurns(){
 	    return subQTurns;
 	}
-    public int getSubQNumber(){
+
+	public int getSubQNumber(){
         return subQ;
     }
 
@@ -158,21 +140,23 @@ public class PCB {
     public void incrementTurns(){
 	    subQTurns++;
 	}
+
 	public void decrementTurns(){
 	    subQTurns--;
 	}
+
 	public void incrTimeUsed(){
 	    timeUsed++;
 	}
+
 	public void incrTimeUsed(int value){
 	    timeUsed += value;
 	}
-	public void incrCpuShots(){
-	    cpuShots++;
-	}
+
 	public void incrIOReq(){
 	    IoReq++;
 	}
+
 	public void resetTurns(){
 	    switch (subQ){
             case 1: subQTurns = 3;
@@ -185,11 +169,8 @@ public class PCB {
                     break;
         }
 	}
-	public int getCPUShots(){
-		return cpuShots;
-	}
 
-	public String getProgramCounter() {
+	public int getProgramCounter() {
 		return programCounter;
 	}
 
@@ -209,7 +190,7 @@ public class PCB {
 		return numberOfReplacements;
 	}
 
-	public void setProgramCounter(String programCounter) {
+	public void setProgramCounter(int programCounter) {
 		this.programCounter = programCounter;
 	}
 
@@ -237,14 +218,6 @@ public class PCB {
 		this.normalTermination = normalTermination;
 	}
 
-	public ArrayList<ReferenceStringEntry> getReferenceString() {
-		return referenceString;
-	}
-
-	public void setReferenceString(ArrayList<ReferenceStringEntry> referenceString) {
-		this.referenceString = referenceString;
-	}
-
 	public int getCleanPageReplacements() {
 		return cleanPageReplacements;
 	}
@@ -261,8 +234,33 @@ public class PCB {
 		this.dirtyPageReplacements = dirtyPageReplacements;
 	}
 
-	public PTEntry[] getPageTable() {
-		return pageTable;
+
+
+	public boolean isQuantumExpired() {
+		return quantumExpired;
+	}
+
+	public void setQuantumExpired(boolean quantumExpired) {
+		this.quantumExpired = quantumExpired;
+	}
+
+	public ArrayList<ReferenceStringEntry>
+	getReferenceStringEntries() {
+		return referenceString;
+	}
+
+	public void setReferenceStringEntry(ArrayList<ReferenceStringEntry> list){
+		referenceString = list;
+	}
+
+	public void addToReferenceStringEntries
+			(ReferenceStringEntry
+					 referenceStringEntry) {
+		referenceString.add(referenceStringEntry);
+	}
+
+	public ArrayList<ReferenceStringEntry> getReferenceString() {
+		return referenceString;
 	}
 }
 

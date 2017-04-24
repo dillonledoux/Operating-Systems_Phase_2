@@ -7,7 +7,7 @@ public class PTEntry {
     private boolean resident = false; // false is 0, true is 1
     private boolean reference = false;
     private boolean modified = false;
-    private int frameNumber;
+    private int frameNumber = -1;
 
     public PTEntry() {}
 

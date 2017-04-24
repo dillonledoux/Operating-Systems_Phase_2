@@ -5,7 +5,9 @@
  * I/O requests.  There are four subqueues each with different quantum
  * definitions as well as turn definitions.
  */
+import java.io.File;
 import java.util.ArrayList;
+import java.util.Scanner;
 
 public class Scheduler {
     
@@ -42,7 +44,7 @@ public class Scheduler {
 		job.setArrivalTime(system.getClk());
 		addToReadyQ(job);
 	}	
-	
+	/*
 	/**
 	 * This method returns execution time required for the current
 	 * execution slice as well as determine what should be done 
@@ -50,14 +52,39 @@ public class Scheduler {
 	 * size as well as the bursts remaining.  Once the job has finished
 	 * all the bursts, it terminates and and is removed from the system.
 	 */
-	public int getNextTask(PCB job){
+//todo need to think about the entries in the job file
+
+	public ReferenceStringEntry getNextInstruction(PCB job){
+	    ReferenceStringEntry currentActionEntry =
+				job.getReferenceString().remove(0);
+	    int quantum = job.getQuantum();
+
+//	    todo
+    }
+
+	public void quantumExpiredAction(PCB job) {
+		if (job.getReferenceString().isEmpty() == false) {
+			updateQandT(job);
+			endQuantumResch(job);
+		}
+		else{
+			system.jobTerminated(job);
+		}
+	}
+	public void ioRequestBeforeQuantumExpireAction(PCB job){
+		moveFromRtoB(job);
+		job.resetTurns();
+	}
+
+
+    public int getNextTask(PCB job){
 			int curBurst = job.getCurBurst();
 			int quantum = job.getQuantum();
-			job.incrCpuShots();
+
 			// Burst is bigger than quantum so return to subQ
 			if(curBurst>quantum){
 				job.setCurBurst(curBurst-quantum);
-				job.incrTimeUsed(quantum);
+
 				updateQandT(job);
 				endQuantumResch(job);
 				return quantum;				
@@ -87,6 +114,7 @@ public class Scheduler {
 				return curBurst;
 			}
 	}
+
 	
 //		---Queue Mutators---
 	
@@ -103,8 +131,8 @@ public class Scheduler {
         }
         job.incrIOReq();
         job.setTimeFinishIO(system.getClk());
-
     }
+
     // Checks Blocked_Q to see if a job has finished I/O and reschedules if true
     public void checkBlockedQ(){
 		boolean enoughTime = true;
@@ -115,7 +143,12 @@ public class Scheduler {
     		}
     		else{
     			job = blockedQ.pop();
-    			addToSubQ(job.getSubQNumber(), job);
+    			if(job.getReferenceString().isEmpty()){
+    				system.jobTerminated(job);
+				}
+    			else{
+    				addToSubQ(job.getSubQNumber(), job);
+				}
     		}
     	}    		
     }
@@ -123,9 +156,38 @@ public class Scheduler {
     public PCB createPCB(ArrayList<String> list){
 	    int jID = Integer.parseInt(list.remove(0));
 	    int jSize = Integer.parseInt(list.remove(0));
-		String programCounter = list.remove(0);
-        PCB pcb = new PCB(jID, jSize, cBurst, list); // adding job id and size
-	    return pcb;
+		String refStringFileAddress = list.remove(0);
+        ArrayList<ReferenceStringEntry> refString = constructReferenceString
+				(refStringFileAddress);
+		int programCounter = (refString.size()-1);
+		PCB pcb = new PCB(jID, jSize, programCounter, refString); // adding job id
+		// and size
+
+		ArrayList<PTEntry> pageTable = new ArrayList<>();
+		int entries = 0;
+		while(entries<128){
+			pageTable.add(new PTEntry());
+			entries++;
+		}
+		return pcb;
+    }
+    public ArrayList<ReferenceStringEntry> constructReferenceString(String address){
+        Scanner scannerJbX;
+        File jbX;
+    	jbX = new File(address);
+        try{
+            scannerJbX = new Scanner(jbX);
+        }
+        catch(Exception e){
+            System.out.println("Could not load from jb" +address);
+            System.exit(1);
+        }
+        ArrayList<ReferenceStringEntry> list = new ArrayList<>();
+        while(scannerJbX.hasNextLine()){
+            String line = scannerJbX.nextLine();
+            list.add(new ReferenceStringEntry(line));
+        }
+        return list;
     }
         
 //		---Queue Maintenance---      

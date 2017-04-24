@@ -24,6 +24,7 @@
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Calendar;
 
 public class SYSTEM {
@@ -45,21 +46,27 @@ public class SYSTEM {
     // job file location from user
     private static String fileLocation;
 
+    private static final int FRAME_SIZE = 256;
+
+
 //		---Object Variables---
      Mem_manager mem_manager;
      Scheduler scheduler;
      Loader loader;
      CPU cpu;
      LogWriter logger;
+     Replacer replacer;
          
-//		---Constructor---
+//		---Constructor---a
      public SYSTEM(){
         initSysTime();
         mem_manager = new Mem_manager(this);
         scheduler = new Scheduler(this, mem_manager);
         loader = new Loader(this, mem_manager, scheduler, fileLocation);       
         logger = new LogWriter(this, mem_manager, scheduler, loader);
-        cpu = new CPU(this, scheduler);
+        replacer = new Replacer(this, mem_manager);
+        cpu = new CPU(this, scheduler, mem_manager, replacer);
+
       
         this.simulate();
      }
@@ -111,9 +118,6 @@ public class SYSTEM {
      public void incrSysClock(int value){
      	for(int i = 1; i<=value; i++){
      		CLOCK++;
-     		if(CLOCK % WRITE_EVERY == 200){
-     			logger.writeToSysLog();
-     		}
      	}
      }
 
@@ -126,9 +130,14 @@ public class SYSTEM {
      	finishedJob.setTimeDelivered(CLOCK);    	
          mem_manager.release(finishedJob.getJobSize());
          jobsDelivered++;
-         logger.writeToJobLog(finishedJob);       
+         logger.releaseWriteToMemStat(finishedJob);
      }
- 
+//     todo needs to be adjusted ^
+
+    public void replacePage(){
+//         todo write the method body for the system controlled page replacement
+    }
+
 //		---Getters and Setters---    
     public int getFreeMemory(){
         return freeMemory;
@@ -145,4 +154,7 @@ public class SYSTEM {
     public void addFreeSpace(int value){
         freeMemory += value;
     }
+
+
+
 }

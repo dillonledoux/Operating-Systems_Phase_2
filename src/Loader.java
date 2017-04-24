@@ -18,8 +18,7 @@ public class Loader{
 	private File arrivals;
 	private File jbX;
 	private Scanner scannerArrivals;
-	private Scanner scannerJbX;
-	private boolean moreJobsInFile = true;	
+	private boolean moreJobsInFile = true;
 	private ArrayList<ArrayList<String>> jobQ = new ArrayList<ArrayList<String>>();
 		
 	SYSTEM system;
@@ -117,36 +116,21 @@ public class Loader{
     	}
     }
 
-    public ArrayList<ReferenceStringEntry> constructReferenceString(String address){
-		jbX = new File(address);
-		try{
-			scannerJbX = new Scanner(jbX);
-		}
-		catch(Exception e){
-			System.out.println("Could not load from jb" +address);
-			System.exit(1);
-		}
-		ArrayList<ReferenceStringEntry> list = new ArrayList<>();
-		while(scannerJbX.hasNextLine()){
-			String line = scannerJbX.nextLine();
-			list.add(new ReferenceStringEntry(line));
-		}
-		return list;
-	}
 
 
-
-   
 //		---Getters---
     public boolean hasMoreJobsInFile(){
         return moreJobsInFile;
      }
-    public ArrayList<ArrayList<String>> getJobQ(){
+
+	public ArrayList<ArrayList<String>> getJobQ(){
     	return jobQ;
     }
+
     public int getJobQSize(){
     	return jobQ.size();
     }
+
     public boolean tasksExist(){
     	if(getJobQSize()+scheduler.getTotalPCBs()==0){
     		return false;
