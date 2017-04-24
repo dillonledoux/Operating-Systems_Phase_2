@@ -53,6 +53,7 @@ public class CPU{
 				}
 				else{
 //					todo do the page replacement action here
+					system.pageNotResidentAction(job, pageNumber);
 				}
 
 				system.incrSysClock(2);

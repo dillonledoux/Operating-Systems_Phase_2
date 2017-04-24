@@ -138,6 +138,22 @@ public class SYSTEM {
 //         todo write the method body for the system controlled page replacement
     }
 
+    public void pageNotResidentAction(PCB job, int pageNumber){
+        if(mem_manager.getPageTables().get((job.getPageTableBaseAddress
+                ())).get(pageNumber).getVi()==1){
+            if(job.getAllocatedFrames()<job.getMaxAllocatableFrames()){
+                mem_manager.allocate();
+                loader.loadFrame(job.getPageTableBaseAddress(), pageNumber,
+                        mem_manager.getFft().remove(0));
+            }
+            else{
+                int victim = replacer.findVictim(job.getPageTableBaseAddress());
+                loader.swapPages(job.getPageTableBaseAddress(), pageNumber,
+                        victim);
+            }
+        }
+    }
+
 //		---Getters and Setters---    
     public int getFreeMemory(){
         return freeMemory;

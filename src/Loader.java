@@ -116,6 +116,17 @@ public class Loader{
     	}
     }
 
+    public void swapPages(int pgTableAddress, int pgNumberToLoad,
+						  int pgNumberOfReplacement){
+//    	todo This method is respponsible for swapping the current page to the
+// backing store if it is dirty and outputting a message to the trace file
+// and loading the new page in the released frame and redefining the page table
+	}
+
+	public void loadFrame(int pgTableAddress, int pgNumber, int frameNumber){
+//    	todo loads a page into an unallocated frame which the system owes the
+// job
+	}
 
 
 //		---Getters---

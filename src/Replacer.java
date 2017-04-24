@@ -59,6 +59,10 @@ public class Replacer {
             }
 
         }
+        for(int i = 0; i<128; i++) {
+            mem_manager.getPageTables().get(pageTableAddress)
+                    .get(i).clearReference();
+        }
         return victimAddress;
     }
 

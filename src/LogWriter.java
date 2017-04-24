@@ -72,9 +72,11 @@ public class LogWriter {
 
 	public void releaseWriteToMemStat(PCB job){
 		String toWrite = String.format("%-5d |%-5d  |%-5d  |%-5d  | " +
-						"%-5d | %-5d | %-5d | %-5d | %-5d |   -   |   -   |", job.isNormalTermination(), job.getJobID(),
-				job.getJobSize(), /*Allocated Frames*/, /*Internal Frag*/,
-				job.getReferenceString().length() /*Not Sure*/, job.getNumberOfPageFaults(),
+						"%-5d | %-5d | %-5d | %-5d | %-5d |   -   |   -   |",
+				job.isNormalTermination(), job.getJobID(),
+				job.getJobSize(), job.getAllocatedFrames(), job
+						.getInternalFragmentation(),
+				job.getOriginalReferenceStringSize(), job.getNumberOfPageFaults(),
 				job.getCleanPageReplacements(), job.getDirtyPageReplacements() );
 
 		String dottedLine =  "\n----------------------------------" +

@@ -23,10 +23,13 @@ public class PCB {
 // -- Phase 2 Addition --
 	private int programCounter;
 	private int jobSizeInPages;
+	private int maxAllocatableFrames;
+	private int allocatedFrames = 0;
 	private int pageTableBaseAddress;
 	private int numberOfPageFaults;
 	private int numberOfReplacements;
-
+	private int internalFragmentation;
+	private int originalReferenceStringSize;
 	private boolean normalTermination = true;
 	private int cleanPageReplacements;
 	private int dirtyPageReplacements;
@@ -44,6 +47,12 @@ public class PCB {
 		jobSize = size;	
 		programCounter = counter;
 		referenceString = refString;
+
+		jobSizeInPages = (int) Math.ceil((jobSize/256.0));
+		maxAllocatableFrames = (int) Math.ceil(jobSizeInPages*0.25);
+
+		internalFragmentation = (jobSizeInPages*256)-jobSize;
+		originalReferenceStringSize = refString.size();
 
 		// populates the page table with empty entries
 
@@ -262,6 +271,28 @@ public class PCB {
 	public ArrayList<ReferenceStringEntry> getReferenceString() {
 		return referenceString;
 	}
+
+	public int getAllocatedFrames() {
+		return allocatedFrames;
+	}
+	public void incrAllocatedFrames() {
+		allocatedFrames++;
+	}
+	public void decrAllocatedFrames(){
+		allocatedFrames--;
+	}
+	public int getMaxAllocatableFrames() {
+		return maxAllocatableFrames;
+	}
+
+	public int getInternalFragmentation() {
+		return internalFragmentation;
+	}
+
+	public int getOriginalReferenceStringSize() {
+		return originalReferenceStringSize;
+	}
+
 }
 
 

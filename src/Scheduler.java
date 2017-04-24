@@ -76,45 +76,6 @@ public class Scheduler {
 		job.resetTurns();
 	}
 
-
-    public int getNextTask(PCB job){
-			int curBurst = job.getCurBurst();
-			int quantum = job.getQuantum();
-
-			// Burst is bigger than quantum so return to subQ
-			if(curBurst>quantum){
-				job.setCurBurst(curBurst-quantum);
-
-				updateQandT(job);
-				endQuantumResch(job);
-				return quantum;				
-			}
-			// Burst is smaller than quantum so I/O is requested
-			else if(curBurst<quantum){
-				job.incrTimeUsed(curBurst);
-				if(job.hasMoreBursts()){		
-					moveFromRtoB(job);
-					job.resetTurns();
-					job.advanceCurBurst();
-					return curBurst;
-				}
-				system.jobTerminated(job);
-				return curBurst;
-			}
-			// Burst is the same size as quantum so I/O may be requested
-			else{
-				job.incrTimeUsed(quantum);
-				if(job.hasMoreBursts()){
-					job.advanceCurBurst();
-					updateQandT(job);
-					moveFromRtoB(job);
-					return quantum;
-				}			
-				system.jobTerminated(job);
-				return curBurst;
-			}
-	}
-
 	
 //		---Queue Mutators---
 	

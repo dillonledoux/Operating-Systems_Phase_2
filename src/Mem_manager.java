@@ -1,4 +1,5 @@
 import java.util.ArrayList;
+import java.util.LinkedList;
 
 /*
  * The Mem_manager serves to manage the memory use of
@@ -10,27 +11,29 @@ public class Mem_manager {
 	
 //		---Class Variables---		
 	SYSTEM system;
-	FFT fft;
 	ArrayList<ArrayList<PTEntry>> pageTables = new ArrayList<>();
 
 	
 	// Defines the point at which the memory is considered full
 	private static final int MEM_CUTOFF = 51;
 	private static final int TOTAL_FRAMES = 128;
+	private LinkedList<Integer> fft = new LinkedList<>();
 	
 //		---Constructor---		
 	public Mem_manager(SYSTEM systemIn){
 	    system = systemIn;
-	    fft = new FFT();
+		for(int i = 0; i<128; i++){
+			fft.add(i);
+		}
 	}
 
 //	todo add frame allocation and tracking for each job
-//	todo add way to determine internal fragmentation
 //	todo possibly make way to track allocated frames
 
 //		---Memory Mutators---
  
 	//allocates free space to jobs if available
+//	todo this must be modified for phase2 operation
 	public boolean allocate(int size){
         if(system.getFreeMemory() >= size){
             system.setFreeMemory(system.getFreeMemory() - size);
@@ -56,10 +59,10 @@ public class Mem_manager {
     }
 
     public double getPercentFreeFrames(){
-    	return (fft.getNumberOfFreeFrames()/TOTAL_FRAMES)*100;
+    	return (fft.size()/TOTAL_FRAMES)*100;
 	}
 	public double getPercentAllocatedFrames(){
-    	return (fft.getNumberAllocatedFrames()/TOTAL_FRAMES)*100;
+    	return ((TOTAL_FRAMES-fft.size())/TOTAL_FRAMES)*100;
 	}
 
 	public ArrayList<ArrayList<PTEntry>> getPageTables() {
@@ -69,5 +72,18 @@ public class Mem_manager {
 	public int addPageTable(ArrayList<PTEntry> pageTable) {
 		this.pageTables.add(pageTable);
 		return(pageTable.size()-1);
+	}
+
+	public LinkedList<Integer> getFft() {
+		return fft;
+	}
+	public int getNextFFNumber(){
+		return fft.poll();
+	}
+	public int getNumberOfFreeFrames(){
+		return fft.size();
+	}
+	public int getNumberAllocatedFrames(){
+		return 256-fft.size();
 	}
 }
