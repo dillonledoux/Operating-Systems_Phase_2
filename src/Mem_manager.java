@@ -16,7 +16,6 @@ public class Mem_manager {
 	
 	// Defines the point at which the memory is considered full
 
-	private  final int FRAME_CUTOFF = 2;
 	private static final int TOTAL_FRAMES = 128;
 	private LinkedList<Integer> fft = new LinkedList<>();
 	private int framesNeeded = 0;
@@ -108,6 +107,7 @@ public class Mem_manager {
 
 
 	public int getFrameCutoff() {
+		int FRAME_CUTOFF = 2;
 		return FRAME_CUTOFF;
 	}
 

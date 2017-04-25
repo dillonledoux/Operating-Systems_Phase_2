@@ -9,7 +9,7 @@ public class Replacer {
     public Replacer(SYSTEM sysIn, Mem_manager memIn){
         system = sysIn;
         mem_manager = memIn;
-    };
+    }
 
     public int findVictim(int pageTableAddress){
         int victimAddress;

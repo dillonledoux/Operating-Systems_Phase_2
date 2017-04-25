@@ -15,9 +15,12 @@ public class LogWriter {
 	private static final String TRACE_PATH = "TRACE";
 
 	
+	@SuppressWarnings("FieldCanBeLocal")
 	private SYSTEM sys;
 	private Mem_manager mem;
+	@SuppressWarnings("FieldCanBeLocal")
 	private Scheduler sch;
+	@SuppressWarnings("FieldCanBeLocal")
 	private Loader ld;
 
 //		---Constructor---	
@@ -97,8 +100,8 @@ public class LogWriter {
 	private void setupTraceFile(){
 		String header = "Trace file starting at CSX time of "+ SYSTEM.systemStartTime+
 				" \n\nJob ID|Placed/Replaced| Frame |       Page Status     |" +
-				"Number|     Page      |Numbers| Referenced | Modified |" +
-				"    ********************************************************";
+				"\nNumber|     Page      |Numbers| Referenced | Modified |" +
+				"\n*******************************************************";
 		File file = new File(TRACE_PATH);
 		try{
 			file.createNewFile();

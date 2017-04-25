@@ -14,9 +14,8 @@ import java.util.Scanner;
 public class Loader{
 	
 //		---Class Variables---
-	
-	private File arrivals;
-	private File jbX;
+
+    private File jbX;
 	private Scanner scannerArrivals;
 	private boolean moreJobsInFile = true;
 	private ArrayList<ArrayList<String>> jobQ = new ArrayList<ArrayList<String>>();
@@ -30,7 +29,7 @@ public class Loader{
 	    system = systemIn;
 	    mem_manager = mem_managerIn;
 	    scheduler = schedulerIn;
-	    arrivals = new File(strIn);
+        File arrivals = new File(strIn);
 	    try{
 	    	scannerArrivals = new Scanner(arrivals);
 	    }
