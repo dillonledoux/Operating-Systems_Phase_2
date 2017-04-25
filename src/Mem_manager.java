@@ -15,9 +15,11 @@ public class Mem_manager {
 
 	
 	// Defines the point at which the memory is considered full
-	private static final int MEM_CUTOFF = 51;
+
+	private  final int FRAME_CUTOFF = 2;
 	private static final int TOTAL_FRAMES = 128;
 	private LinkedList<Integer> fft = new LinkedList<>();
+	private int framesNeeded = 0;
 	
 //		---Constructor---		
 	public Mem_manager(SYSTEM systemIn){
@@ -27,36 +29,53 @@ public class Mem_manager {
 		}
 	}
 
-//	todo add frame allocation and tracking for each job
-//	todo possibly make way to track allocated frames
 
 //		---Memory Mutators---
  
 	//allocates free space to jobs if available
-//	todo this must be modified for phase2 operation
-	public boolean allocate(int size){
-        if(system.getFreeMemory() >= size){
-            system.setFreeMemory(system.getFreeMemory() - size);
-            return true;
-        }
-		return false;
+
+	public int allocate(){
+        return fft.poll();
     } 
 	//releases the memory occupied by tasks which have terminated
-    public void release(int size){
-        system.addFreeSpace(size);
+    public void release(int pageTableAddress){
+        for(int i = 0; i<pageTables.get(pageTableAddress).size(); i++) {
+			if (pageTables.get(pageTableAddress).get(i).getFrameNumber() != -1) {
+				fft.add(pageTables.get(pageTableAddress).get(i).getFrameNumber());
+				pageTables.get(pageTableAddress).get(i).setFrameNumber(-1);
+				framesNeeded--;
+			}
+		}
     }
-   
+
+    public boolean admit(int size){
+    	int framesNecessary = (int) Math.ceil(Math.ceil(size/256.0)*0.25);
+    	if(framesNeeded>=framesNecessary){
+			framesNeeded += framesNecessary;
+    		return true;
+		}
+		else{
+    		return false;
+		}
+	}
+
+	public void initializeViBits(PCB job){
+		for(int i = 0; i<job.getJobSizeInPages(); i++) {
+			pageTables.get(job
+					.getPageTableBaseAddress()).get(i).setVi(1);
+		}
+		for(int i = 0; i<128; i++){
+			pageTables.get(job.getPageTableBaseAddress())
+					.get(i).clearResident();
+			pageTables.get(job.getPageTableBaseAddress())
+					.get(i).clearReference();
+			pageTables.get(job.getPageTableBaseAddress())
+					.get(i).clearModified();
+		}
+	}
+
 //		---Getter and Logging---
-    public int getMemCutoff(){
-    	return MEM_CUTOFF;
-    }
-    //collects the memory statistics at the time invoked
-    public String memStats(){
-    	String toReturn = String.format("%-5d   |   %-3d  |  %-3d   |",
-    			system.getClk(), system.getFreeMemory(), 
-    			(SYSTEM.TOTAL_MEMORY-system.getFreeMemory()));
-    	return toReturn;
-    }
+
 
     public double getPercentFreeFrames(){
     	return (fft.size()/TOTAL_FRAMES)*100;
@@ -84,6 +103,16 @@ public class Mem_manager {
 		return fft.size();
 	}
 	public int getNumberAllocatedFrames(){
-		return 256-fft.size();
+		return 128-fft.size();
 	}
+
+
+	public int getFrameCutoff() {
+		return FRAME_CUTOFF;
+	}
+
+	public int getFramesNeeded() {
+		return framesNeeded;
+	}
+	//collects the memory statistics at the time invoked
 }

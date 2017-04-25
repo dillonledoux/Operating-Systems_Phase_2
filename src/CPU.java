@@ -37,7 +37,6 @@ public class CPU{
 			noJob = false;
 			PCB job = scheduler.getNextPCB();
 			int remainingTime = job.getQuantum();
-//			todo write the page checking and faulting for each page
 			while (job.isQuantumExpired() == false) {
 
 				ReferenceStringEntry currentEntry = scheduler
@@ -50,10 +49,18 @@ public class CPU{
 
 					mem_manager.getPageTables().get((job.getPageTableBaseAddress
 							())).get(pageNumber).setReference(true);
+
 				}
 				else{
-//					todo do the page replacement action here
-					system.pageNotResidentAction(job, pageNumber);
+
+					// if the job is found to be not valid, then it breaks
+					// this iteration of the loop.
+					if(system.pageNotResidentAction(job, pageNumber)==true){
+						job.getReferenceString().add(0, currentEntry);
+						scheduler.moveFromRtoB(job);
+					}
+					system.jobTerminated(job);
+					break;
 				}
 
 				system.incrSysClock(2);

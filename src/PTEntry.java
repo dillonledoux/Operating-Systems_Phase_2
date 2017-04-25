@@ -10,7 +10,7 @@ public class PTEntry {
     private int frameNumber = -1;
     private static final int MAX_CAPACITY = 256;
 
-    private int occupiedSpace = 0;
+  //  private int occupiedSpace = 0;
 
     public PTEntry() {}
 
@@ -26,8 +26,12 @@ public class PTEntry {
         return resident;
     }
 
-    public void setResident(boolean resident) {
-        this.resident = resident;
+    public void setResident() {
+        resident = true;
+    }
+
+    public void clearResident(){
+        resident = false;
     }
 
     public boolean isReferenced() {
@@ -35,7 +39,7 @@ public class PTEntry {
     }
 
     public void setReference(boolean reference) {
-        this.reference = reference;
+        reference = reference;
     }
 
     public void clearReference(){
@@ -47,7 +51,11 @@ public class PTEntry {
     }
 
     public void setModified(boolean modified) {
-        this.modified = modified;
+        modified = true;
+    }
+
+    public void clearModified(){
+        modified = false;
     }
 
     public int getFrameNumber() {
@@ -57,6 +65,7 @@ public class PTEntry {
     public void setFrameNumber(int frameNumber) {
         this.frameNumber = frameNumber;
     }
+  /*
     public int getOccupiedSpace() {
         return occupiedSpace;
     }
@@ -64,4 +73,5 @@ public class PTEntry {
     public void setOccupiedSpace(int occupiedSpace) {
         this.occupiedSpace = occupiedSpace;
     }
+    */
 }

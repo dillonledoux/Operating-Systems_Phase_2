@@ -111,11 +111,11 @@ public class LogWriter {
 		}
 	}
 
-	public void writeToTraceFile(PCB job, PTEntry entry){
+	public void writeToTraceFile(PCB job, PTEntry entry, int pgNumber){
 		String toWrite = String.format("%-5d | %-5d | %-5d | %-5d | %-5d", job.getJobID(),
-				/* placed/repl pages*/, entry.getFrameNumber(),
+				pgNumber, entry.getFrameNumber(),
 				entry.isReferenced(), entry.isModified());
-//		todo Need to add the trace file writing.  Not sure about when to call
+//		todo Do we need to deal with the dirty bit or write a special message?
 	}
 
 }

@@ -79,9 +79,10 @@ public class Loader{
     public void loadFromJobQ(){
     	int index = 0;
     	boolean canAllocate; 
-    	while(system.getFreeMemory()>=mem_manager.getMemCutoff()  
+    	while((128-mem_manager.getFramesNeeded())>=mem_manager.getFrameCutoff()
     		&& scheduler.getTotalPCBs()<15 && index<jobQ.size()){   		
-    		canAllocate = mem_manager.allocate(Integer.parseInt(jobQ.get(index).get(1)));
+    		canAllocate = mem_manager.admit(Integer.parseInt(jobQ.get(index).get
+					(1)));
     		if(canAllocate){
     			scheduler.setup(jobQ.remove(index));
     		}
@@ -98,13 +99,14 @@ public class Loader{
     	loadFromJobQ();
     	boolean canAllocate;
     	ArrayList<String> newJob;
-    	while(system.getFreeMemory()>=mem_manager.getMemCutoff() && scheduler.getTotalPCBs()<15
-    			&& moreJobsInFile ){
+    	while((128-mem_manager.getFramesNeeded())>=mem_manager.getFrameCutoff()
+				&& scheduler.getTotalPCBs()<15 && moreJobsInFile ){
     		newJob = getNextJob();
     		if(!newJob.get(0).equals("0")){
-    			canAllocate = mem_manager.allocate(Integer.parseInt(newJob.get(1)));
+    			canAllocate = mem_manager.admit(Integer.parseInt(newJob.get
+						(1)));
     			if(canAllocate){
-    				scheduler.setup(newJob);    				
+    				scheduler.setup(newJob);
     			}
     			else{
     				jobQ.add(newJob);   				
@@ -117,15 +119,25 @@ public class Loader{
     }
 
     public void swapPages(int pgTableAddress, int pgNumberToLoad,
-						  int pgNumberOfReplacement){
-//    	todo This method is respponsible for swapping the current page to the
+						  int pgNumberOfToBeReplaced){
+
 // backing store if it is dirty and outputting a message to the trace file
 // and loading the new page in the released frame and redefining the page table
-	}
+		int frameNumber = mem_manager.getPageTables().get(pgTableAddress).get
+				(pgNumberOfToBeReplaced).getFrameNumber();
+		mem_manager.getPageTables().get(pgTableAddress).get
+				(pgNumberOfToBeReplaced).setFrameNumber(-1);
+		mem_manager.getPageTables().get(pgTableAddress).get
+				(pgNumberToLoad).setFrameNumber(frameNumber);
+		if(mem_manager.getPageTables().get(pgTableAddress).get
+				(pgNumberOfToBeReplaced).isModified()){
+		}
+    }
 
-	public void loadFrame(int pgTableAddress, int pgNumber, int frameNumber){
-//    	todo loads a page into an unallocated frame which the system owes the
-// job
+	public void loadFrameWithPage(int pgTableAddress, int pgNumber, int frame) {
+		mem_manager.getPageTables().get(pgTableAddress).get(pgNumber)
+				.setFrameNumber(frame);
+
 	}
 
 

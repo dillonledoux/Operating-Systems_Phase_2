@@ -17,8 +17,6 @@ public class Replacer {
         outerloop:
         while(true){
             for(int i = 0; i<128; i++) {
-//                todo here ^ need to figure out the max length of each pg table
-
                 // returns the first page that is resident but also
                 // unreferenced and unmodified
                 if (!mem_manager.getPageTables().get(pageTableAddress)
@@ -63,6 +61,10 @@ public class Replacer {
             mem_manager.getPageTables().get(pageTableAddress)
                     .get(i).clearReference();
         }
+
+
+
+
         return victimAddress;
     }
 

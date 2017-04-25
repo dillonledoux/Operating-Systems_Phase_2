@@ -40,8 +40,6 @@ public class SYSTEM {
     // stores the CSX system time when SYSTEM initialized 
     public static String systemStartTime;          
     // initial free space of 512 units
-    private static int freeMemory = 512;     				
-    // variable for tracking number of jobs delivered   
     private int jobsDelivered = 0;
     // job file location from user
     private static String fileLocation;
@@ -67,7 +65,6 @@ public class SYSTEM {
         replacer = new Replacer(this, mem_manager);
         cpu = new CPU(this, scheduler, mem_manager, replacer);
 
-      
         this.simulate();
      }
 
@@ -75,7 +72,6 @@ public class SYSTEM {
     public static void main(String args[]){
     	fileLocation = args[0];
     	SYSTEM sys = new SYSTEM();
-		
     }
        
 //		---SYSTEM Object Methods---
@@ -128,48 +124,58 @@ public class SYSTEM {
       */
      public void jobTerminated(PCB finishedJob){
      	finishedJob.setTimeDelivered(CLOCK);    	
-         mem_manager.release(finishedJob.getJobSize());
+         mem_manager.release(finishedJob.getPageTableBaseAddress());
          jobsDelivered++;
+         if(jobsDelivered%4==0){
+             logger.intervalWriteToMemStat();
+         }
          logger.releaseWriteToMemStat(finishedJob);
      }
-//     todo needs to be adjusted ^
 
-    public void replacePage(){
-//         todo write the method body for the system controlled page replacement
-    }
 
-    public void pageNotResidentAction(PCB job, int pageNumber){
+    public boolean pageNotResidentAction(PCB job, int pageNumber){
+        job.incrNumberOfPageFaults();
         if(mem_manager.getPageTables().get((job.getPageTableBaseAddress
                 ())).get(pageNumber).getVi()==1){
             if(job.getAllocatedFrames()<job.getMaxAllocatableFrames()){
                 mem_manager.allocate();
-                loader.loadFrame(job.getPageTableBaseAddress(), pageNumber,
-                        mem_manager.getFft().remove(0));
+                loader.loadFrameWithPage(job.getPageTableBaseAddress(),
+                        pageNumber, mem_manager.getFft().remove(0));
             }
             else{
                 int victim = replacer.findVictim(job.getPageTableBaseAddress());
+                if(mem_manager.getPageTables().get(job.getPageTableBaseAddress()).get
+                        (victim).isModified()){
+                    job.incrDirtyPageReplacements();
+                }
+                else{
+                    job.incrCleanPageReplacements();
+                }
                 loader.swapPages(job.getPageTableBaseAddress(), pageNumber,
                         victim);
             }
+            logger.writeToTraceFile(job, mem_manager.getPageTables().get(job
+                    .getPageTableBaseAddress()).get(pageNumber), pageNumber);
+            return true;
+        }
+        else{
+//          If the job tries to reference and invalid page number, the job is
+//          set as an abnormal termination and this is flagged back to the CPU
+//          through the boolean return value
+            job.setToAbnormalTermination();
+            return false;
         }
     }
 
 //		---Getters and Setters---    
-    public int getFreeMemory(){
-        return freeMemory;
-    }
+
     public int getClk(){
         return CLOCK;
      }
     public int getJobsDelivered(){
     	return jobsDelivered;
     }
-    public void setFreeMemory(int value){
-        freeMemory = value;
-    }
-    public void addFreeSpace(int value){
-        freeMemory += value;
-    }
+
 
 
 

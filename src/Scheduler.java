@@ -41,6 +41,7 @@ public class Scheduler {
      */
 	public void setup(ArrayList<String> list){
 	    PCB job = createPCB(list);
+	    mem_manager.initializeViBits(job);
 		job.setArrivalTime(system.getClk());
 		addToReadyQ(job);
 	}	
@@ -57,9 +58,7 @@ public class Scheduler {
 	public ReferenceStringEntry getNextInstruction(PCB job){
 	    ReferenceStringEntry currentActionEntry =
 				job.getReferenceString().remove(0);
-	    int quantum = job.getQuantum();
-
-//	    todo
+		return currentActionEntry;
     }
 
 	public void quantumExpiredAction(PCB job) {
@@ -130,24 +129,26 @@ public class Scheduler {
 			pageTable.add(new PTEntry());
 			entries++;
 		}
+
 		return pcb;
     }
     public ArrayList<ReferenceStringEntry> constructReferenceString(String address){
-        Scanner scannerJbX;
+		ArrayList<ReferenceStringEntry> list = new ArrayList<>();
+    	Scanner scannerJbX;
         File jbX;
     	jbX = new File(address);
         try{
             scannerJbX = new Scanner(jbX);
+			while(scannerJbX.hasNextLine()) {
+				String line = scannerJbX.nextLine();
+				list.add(new ReferenceStringEntry(line));
+			}
         }
         catch(Exception e){
             System.out.println("Could not load from jb" +address);
             System.exit(1);
         }
-        ArrayList<ReferenceStringEntry> list = new ArrayList<>();
-        while(scannerJbX.hasNextLine()){
-            String line = scannerJbX.nextLine();
-            list.add(new ReferenceStringEntry(line));
-        }
+
         return list;
     }
         

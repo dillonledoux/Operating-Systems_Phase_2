@@ -37,9 +37,6 @@ public class PCB {
 	private  ArrayList<ReferenceStringEntry>
 			referenceString = new ArrayList<ReferenceStringEntry>();
 
-// todo be able to track the max amount of pages that can be allocated to a job
-
-//	todo trck the number of frames actually allocated to a specific job
 	//  --- Constructor ---
 	public PCB(int id, int size, int counter, ArrayList<ReferenceStringEntry>
 			refString){
@@ -55,10 +52,6 @@ public class PCB {
 		originalReferenceStringSize = refString.size();
 
 		// populates the page table with empty entries
-
-
-
-
 
 	}
 
@@ -223,24 +216,24 @@ public class PCB {
 		return normalTermination;
 	}
 
-	public void setNormalTermination(boolean normalTermination) {
-		this.normalTermination = normalTermination;
+	public void setToAbnormalTermination() {
+		normalTermination = false;
 	}
 
 	public int getCleanPageReplacements() {
 		return cleanPageReplacements;
 	}
 
-	public void setCleanPageReplacements(int cleanPageReplacements) {
-		this.cleanPageReplacements = cleanPageReplacements;
+	public void incrCleanPageReplacements() {
+		cleanPageReplacements++;
 	}
 
 	public int getDirtyPageReplacements() {
 		return dirtyPageReplacements;
 	}
 
-	public void setDirtyPageReplacements(int dirtyPageReplacements) {
-		this.dirtyPageReplacements = dirtyPageReplacements;
+	public void incrDirtyPageReplacements() {
+		dirtyPageReplacements++;
 	}
 
 
@@ -292,6 +285,8 @@ public class PCB {
 	public int getOriginalReferenceStringSize() {
 		return originalReferenceStringSize;
 	}
+
+
 
 }
 
