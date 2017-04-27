@@ -22,8 +22,6 @@
 *final entry after all jobs have completed for thoroughness.
 */
 
-import com.sun.tools.doclets.formats.html.SourceToHTMLConverter;
-
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -126,19 +124,13 @@ public class SYSTEM {
       * write to JOB_LOG
       */
      public void jobTerminated(PCB finishedJob) {
-
          finishedJob.setTimeDelivered(CLOCK);
-
          mem_manager.release(finishedJob.getPageTableBaseAddress());
-//         System.out.println("allocatedFramesAFTERRelease: "+mem_manager
-//                 .getFramesToBeAllocated());
-
          jobsDelivered++;
          if (jobsDelivered % 4 == 0) {
              logger.intervalWriteToMemStat();
          }
          logger.releaseWriteToMemStat(finishedJob);
-
      }
 
 
@@ -155,6 +147,7 @@ public class SYSTEM {
             }
             else{
                 int victim = replacer.findVictim(job.getPageTableBaseAddress());
+                logger.writeToTraceFile(job, victim);
                 if(mem_manager.getModifiedBit(job.getPageTableBaseAddress(),
                         pageNumber)){
 
@@ -165,7 +158,7 @@ public class SYSTEM {
                 }
                 loader.swapPages(job.getPageTableBaseAddress(), pageNumber,
                         victim);
-                logger.writeToTraceFile(job, victim);
+
                 replacer.clearReferenceBits(job.getPageTableBaseAddress());
 
             }

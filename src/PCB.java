@@ -76,7 +76,7 @@ public class PCB {
     	
 //		---Setters and Getters---
 	public void setTimeFinishIO(int clkIn){
-		timeFinishIO = clkIn+12;
+		timeFinishIO = clkIn;
 	}
 
 	public void setArrivalTime(int time){

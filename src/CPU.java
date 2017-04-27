@@ -10,6 +10,7 @@ public class CPU{
 	Scheduler scheduler;
 	Mem_manager mem_manager;
 	Replacer replacer;
+	private int timeInCurrentQuantum;
 
 //		---Constructor---    
 	public CPU(SYSTEM systemIn, Scheduler schedulerIn, Mem_manager memIn,
@@ -40,11 +41,10 @@ public class CPU{
 		while(scheduler.getRQSize()>0) {
 			noJob = false;
 			PCB job = scheduler.getNextPCB();
-			int quantum = job.getQuantum();
-			int timeInCurrentQuantum = 0;
+			int quantum;
 			while (job.isQuantumExpired() == false && job.getReferenceString
 					().size() != 0) {
-
+				quantum = job.getQuantum();
 				ReferenceStringEntry currentEntry = scheduler
 						.getNextInstruction(job);
 				String instrCode = currentEntry.getCode();
@@ -65,9 +65,7 @@ public class CPU{
 						system.jobTerminated(job);
 						job.clearReferenceString();
 					}
-
 					return;
-
 				}
 
 				mem_manager.setReferenceBit(job.getPageTableBaseAddress(),
@@ -76,38 +74,42 @@ public class CPU{
 				timeInCurrentQuantum+=2;
 				if(instrCode.equals("p")){
 					if(timeInCurrentQuantum==quantum){
-						if(scheduler.quantumExpiredAction(job)==false){
-							return;
-						}
+						timeInCurrentQuantum = 0;
+						scheduler.quantumExpiredAction(job);
+						return;
+					}
+					if(job.getReferenceString().isEmpty()){
+						system.jobTerminated(job);
+						return;
 					}
 				}
 				else if(instrCode.equals("w")) {
-					mem_manager.setModifiedBit(job.getPageTableBaseAddress(),
-							pageNumber);
-					if (timeInCurrentQuantum<quantum) {
-						if(scheduler.ioRequestBeforeQuantumExpireAction(job)
-								==false){
-							return;
-						}
-					}
-					else {
-						if(scheduler.ioRequestAndQuantumExpire(job)==false){
-							return;
-						}
+					System.out.print("");
+					mem_manager.getPtLib().get(job.getPageTableBaseAddress())
+							[pageNumber].setModified();
+					timeInCurrentQuantum = 0;
+					if (timeInCurrentQuantum < quantum) {
+						scheduler.ioRequestBeforeQuantumExpireAction(job);
 
 					}
+					else {
+						scheduler.ioRequestAndQuantumExpire(job);
+					}
+
+					return;
 				}
 				else if(instrCode.equals("r")) {
+					timeInCurrentQuantum = 0;
 					if (timeInCurrentQuantum < quantum) {
-						if (scheduler.ioRequestBeforeQuantumExpireAction(job)
-								== false) {
-							return;
-						}
-					} else {
-						if (scheduler.ioRequestAndQuantumExpire(job) == false) {
-							return;
-						}
+						scheduler.ioRequestBeforeQuantumExpireAction(job);
+
 					}
+					else {
+						scheduler.ioRequestAndQuantumExpire(job);
+						}
+
+					return;
+
 				}
 				else{
 					System.out.println("Encountered an weird character: " +

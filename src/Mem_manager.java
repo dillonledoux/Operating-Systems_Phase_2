@@ -121,12 +121,6 @@ public class Mem_manager {
 	public boolean isPageResident(int ptBaseAddr, int pgNumber){
 		return ptLib.get(ptBaseAddr)[pgNumber].isResident();
 	}
-	public void setPageResident(int ptBaseAddr, int pgNumber){
-		ptLib.get(ptBaseAddr)[pgNumber].setResident();
-	}
-	public void clearPageResident(int ptBaseAddr, int pgNumber){
-		ptLib.get(ptBaseAddr)[pgNumber].clearResident();
-	}
 	public void setReferenceBit(int ptBaseAddr, int pgNumber){
 		ptLib.get(ptBaseAddr)[pgNumber].setReference(true);
 	}
@@ -140,10 +134,11 @@ public class Mem_manager {
 		return ptLib.get(ptBaseAddr)[pgNumber].isModified();
 	}
 	public void setModifiedBit(int ptBaseAddr, int pgNumber){
-		ptLib.get(ptBaseAddr)[pgNumber].setModified(true);
+		System.out.println("modified");
+		ptLib.get(ptBaseAddr)[pgNumber].setModified();
 	}
 	public void clearModifiedBit(int ptBaseAddr, int pgNumber){
-		ptLib.get(ptBaseAddr)[pgNumber].setModified(false);
+		ptLib.get(ptBaseAddr)[pgNumber].clearModified();
 	}
 
 	public double getPercentFreeFrames(){

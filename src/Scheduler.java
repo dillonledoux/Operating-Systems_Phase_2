@@ -105,11 +105,13 @@ public class Scheduler {
 	//
 
 	public void pageFaultBlock(PCB job){
-		blockedQ.add(job);
+		System.out.println("PF send to BQ");
+    	blockedQ.add(job);
 		job.setTimeFinishIO(system.getClk()+10);
 	}
     public void moveFromRtoB(PCB job){
-        blockedQ.add(job);
+
+		blockedQ.add(job);
         if(job.getSubQNumber()==4){
         	job.setSubQ(1);
         	job.resetTurns();
@@ -165,7 +167,8 @@ public class Scheduler {
 		ArrayList<ReferenceStringEntry> list = new ArrayList<>();
     	Scanner scannerJbX;
 //todo change the absolute file reference to a dynamic one
-    	File jbX = new File("/Users/dillonledoux/Desktop/jobs/"+address);
+    	File jbX = new File("C:\\Users\\Dillon " +
+				"LeDoux\\Desktop\\Phase_2_Input_Files\\"+address);
         try{
             scannerJbX = new Scanner(jbX);
 			while(scannerJbX.hasNextLine()) {
