@@ -61,7 +61,6 @@ public class CPU{
 						// todo changes ok?
 					}
 					else {
-						System.out.println(job.getJobID());
 						system.jobTerminated(job);
 						job.clearReferenceString();
 					}
@@ -85,8 +84,8 @@ public class CPU{
 				}
 				else if(instrCode.equals("w")) {
 					System.out.print("");
-					mem_manager.getPtLib().get(job.getPageTableBaseAddress())
-							[pageNumber].setModified();
+					mem_manager.setModifiedBit(job.getPageTableBaseAddress(),
+                            pageNumber);
 					timeInCurrentQuantum = 0;
 					if (timeInCurrentQuantum < quantum) {
 						scheduler.ioRequestBeforeQuantumExpireAction(job);

@@ -134,7 +134,6 @@ public class Mem_manager {
 		return ptLib.get(ptBaseAddr)[pgNumber].isModified();
 	}
 	public void setModifiedBit(int ptBaseAddr, int pgNumber){
-		System.out.println("modified");
 		ptLib.get(ptBaseAddr)[pgNumber].setModified();
 	}
 	public void clearModifiedBit(int ptBaseAddr, int pgNumber){

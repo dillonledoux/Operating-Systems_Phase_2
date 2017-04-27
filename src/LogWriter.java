@@ -126,7 +126,7 @@ public class LogWriter {
 				pgNumber, entry.getFrameNumber(),
 				Boolean.toString(entry.isReferenced()), Boolean.toString(entry
 						.isModified()));
-		System.out.println(entry.isModified());
+
 		String dottedLine =  "\n----------------------------------" +
 				"---------------------\n";
 		File file = new File(TRACE_PATH);

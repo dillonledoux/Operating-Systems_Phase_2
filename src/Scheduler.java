@@ -65,7 +65,7 @@ public class Scheduler {
 			return true;
 		}
 		else{
-			System.out.println(job.getJobID());
+
 			system.jobTerminated(job);
 			return false;
 		}
@@ -105,7 +105,6 @@ public class Scheduler {
 	//
 
 	public void pageFaultBlock(PCB job){
-		System.out.println("PF send to BQ");
     	blockedQ.add(job);
 		job.setTimeFinishIO(system.getClk()+10);
 	}
