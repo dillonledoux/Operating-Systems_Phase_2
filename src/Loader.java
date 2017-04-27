@@ -19,13 +19,15 @@ public class Loader{
 	private Scanner scannerArrivals;
 	private boolean moreJobsInFile = true;
 	private ArrayList<ArrayList<String>> jobQ = new ArrayList<ArrayList<String>>();
-		
+	private int counter = 0;
+
 	SYSTEM system;
 	Mem_manager mem_manager;
 	Scheduler scheduler;
 		
 //		---Constructor---
-	public Loader(SYSTEM systemIn, Mem_manager mem_managerIn, Scheduler schedulerIn, String strIn){
+	public Loader(SYSTEM systemIn, Mem_manager mem_managerIn,
+				  Scheduler schedulerIn, String strIn){
 	    system = systemIn;
 	    mem_manager = mem_managerIn;
 	    scheduler = schedulerIn;
@@ -34,7 +36,7 @@ public class Loader{
 	    	scannerArrivals = new Scanner(arrivals);
 	    }
 	    catch(Exception e){
-	    	System.out.println("Could not load form Arrivals File");
+	    	System.out.println("Could not load from Arrivals File");
 	    	System.exit(1);
 	    }
 	}
@@ -54,13 +56,15 @@ public class Loader{
      */
     public ArrayList<String> getNextJob(){
     	if(scannerArrivals.hasNextLine() == false){
-    		moreJobsInFile = false;
+
+			moreJobsInFile = false;
     		ArrayList<String> list = new ArrayList<>();
     		list.add("0");
     		return list;
     	}
     	String line = scannerArrivals.nextLine();
-        ArrayList<String> stringList = new ArrayList<>(Arrays.asList(line.split("\\W+")));
+        ArrayList<String> stringList = new ArrayList<>(Arrays.asList
+				(line.split("\\W+")));
         try{
         	Integer.parseInt(stringList.get(0));
         }
@@ -76,13 +80,16 @@ public class Loader{
      * memory to them and add them to the readyQ.  
      */
     public void loadFromJobQ(){
+
+    	counter++;
     	int index = 0;
-    	boolean canAllocate; 
-    	while((128-mem_manager.getFramesNeeded())>=mem_manager.getFrameCutoff()
-    		&& scheduler.getTotalPCBs()<15 && index<jobQ.size()){   		
-    		canAllocate = mem_manager.admit(Integer.parseInt(jobQ.get(index).get
+    	boolean canAllocate;
+		while((mem_manager.getFramesToBeAllocated())<=128
+    		&& scheduler.getTotalPCBs()<15 && index<jobQ.size()){
+
+			canAllocate = mem_manager.admit(Integer.parseInt(jobQ.get(index).get
 					(1)));
-    		if(canAllocate){
+			if(canAllocate){
     			scheduler.setup(jobQ.remove(index));
     		}
     		index++;
@@ -95,16 +102,20 @@ public class Loader{
     * enough memory becomes available.
     */
     public void loadTasks(){
-    	loadFromJobQ();
+
+		loadFromJobQ();
     	boolean canAllocate;
     	ArrayList<String> newJob;
-    	while((128-mem_manager.getFramesNeeded())>=mem_manager.getFrameCutoff()
+
+		while((mem_manager.getFramesToBeAllocated())<= 128
 				&& scheduler.getTotalPCBs()<15 && moreJobsInFile ){
-    		newJob = getNextJob();
-    		if(!newJob.get(0).equals("0")){
+
+			newJob = getNextJob();
+    		if((Integer.parseInt(newJob.get(0))!=0)){
     			canAllocate = mem_manager.admit(Integer.parseInt(newJob.get
 						(1)));
-    			if(canAllocate){
+
+				if(canAllocate){
     				scheduler.setup(newJob);
     			}
     			else{
@@ -122,24 +133,22 @@ public class Loader{
 
 // backing store if it is dirty and outputting a message to the trace file
 // and loading the new page in the released frame and redefining the page table
-		int frameNumber = mem_manager.getPageTables().get(pgTableAddress).get
-				(pgNumberOfToBeReplaced).getFrameNumber();
-		mem_manager.getPageTables().get(pgTableAddress).get
-				(pgNumberOfToBeReplaced).setFrameNumber(-1);
-		mem_manager.getPageTables().get(pgTableAddress).get
-				(pgNumberToLoad).setFrameNumber(frameNumber);
-		if(mem_manager.getPageTables().get(pgTableAddress).get
-				(pgNumberOfToBeReplaced).isModified()){
-		}
+		int frameNumber = mem_manager.getFrameNumberFromPageTable
+				(pgTableAddress, pgNumberOfToBeReplaced);
+		mem_manager.setFrameNumberInPageTable(pgTableAddress,
+				pgNumberOfToBeReplaced, -1);
+		mem_manager.clearResidentBit(pgTableAddress, pgNumberOfToBeReplaced);
+		mem_manager.setFrameNumberInPageTable(pgTableAddress,
+				pgNumberToLoad, frameNumber);
+		mem_manager.setResidentBit(pgTableAddress, pgNumberToLoad);
+
     }
 
-	public void loadFrameWithPage(int pgTableAddress, int pgNumber, int frame) {
-		mem_manager.getPageTables().get(pgTableAddress).get(pgNumber)
-				.setFrameNumber(frame);
+	public void loadFrameWithPage(int pgTableAddress, int pgNumber, int frame){
+
+    	mem_manager.setFrameNumberInPageTable(pgTableAddress, pgNumber, frame);
 
 	}
-
-
 //		---Getters---
     public boolean hasMoreJobsInFile(){
         return moreJobsInFile;

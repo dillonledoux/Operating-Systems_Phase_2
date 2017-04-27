@@ -22,6 +22,8 @@
 *final entry after all jobs have completed for thoroughness.
 */
 
+import com.sun.tools.doclets.formats.html.SourceToHTMLConverter;
+
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -65,15 +67,15 @@ public class SYSTEM {
         replacer = new Replacer(this, mem_manager);
         cpu = new CPU(this, scheduler, mem_manager, replacer);
 
+        logger.setupTraceFile();
+
         this.simulate();
      }
-
 //		---MAIN---     
     public static void main(String args[]){
     	fileLocation = args[0];
     	SYSTEM sys = new SYSTEM();
     }
-       
 //		---SYSTEM Object Methods---
     /**
     * Handles the simulation of the system by continuing as long more
@@ -86,9 +88,10 @@ public class SYSTEM {
     */
      public void simulate(){
     	 while(loader.hasMoreJobsInFile() || loader.tasksExist()){
-    		scheduler.checkBlockedQ();
-    		loader.loadTasks();
-    		cpu.execute();
+
+             scheduler.checkBlockedQ();
+    		 loader.loadTasks();
+    		 cpu.execute();
     	}
     	System.out.println("Simulation complete");
      }     
@@ -122,30 +125,39 @@ public class SYSTEM {
       * appropriate values, releasing memory, and by initiating a
       * write to JOB_LOG
       */
-     public void jobTerminated(PCB finishedJob){
-     	finishedJob.setTimeDelivered(CLOCK);    	
+     public void jobTerminated(PCB finishedJob) {
+
+         finishedJob.setTimeDelivered(CLOCK);
+
          mem_manager.release(finishedJob.getPageTableBaseAddress());
+//         System.out.println("allocatedFramesAFTERRelease: "+mem_manager
+//                 .getFramesToBeAllocated());
+
          jobsDelivered++;
-         if(jobsDelivered%4==0){
+         if (jobsDelivered % 4 == 0) {
              logger.intervalWriteToMemStat();
          }
          logger.releaseWriteToMemStat(finishedJob);
+
      }
 
 
     public boolean pageNotResidentAction(PCB job, int pageNumber){
+
         job.incrNumberOfPageFaults();
-        if(mem_manager.getPageTables().get((job.getPageTableBaseAddress
-                ())).get(pageNumber).getVi()==1){
+        if(mem_manager.getViBit(job.getPageTableBaseAddress(), pageNumber)==1){
             if(job.getAllocatedFrames()<job.getMaxAllocatableFrames()){
-                mem_manager.allocate();
+
                 loader.loadFrameWithPage(job.getPageTableBaseAddress(),
-                        pageNumber, mem_manager.getFft().remove(0));
+                        pageNumber, mem_manager.allocate());
+                job.incrAllocatedFrames();
+                logger.writeToTraceFile(job, pageNumber);
             }
             else{
                 int victim = replacer.findVictim(job.getPageTableBaseAddress());
-                if(mem_manager.getPageTables().get(job.getPageTableBaseAddress()).get
-                        (victim).isModified()){
+                if(mem_manager.getModifiedBit(job.getPageTableBaseAddress(),
+                        pageNumber)){
+
                     job.incrDirtyPageReplacements();
                 }
                 else{
@@ -153,15 +165,20 @@ public class SYSTEM {
                 }
                 loader.swapPages(job.getPageTableBaseAddress(), pageNumber,
                         victim);
+                logger.writeToTraceFile(job, victim);
+                replacer.clearReferenceBits(job.getPageTableBaseAddress());
+
             }
-            logger.writeToTraceFile(job, mem_manager.getPageTables().get(job
-                    .getPageTableBaseAddress()).get(pageNumber), pageNumber);
+            mem_manager.setResidentBit(job.getPageTableBaseAddress(), pageNumber);
+
             return true;
         }
         else{
 //          If the job tries to reference and invalid page number, the job is
 //          set as an abnormal termination and this is flagged back to the CPU
 //          through the boolean return value
+
+//            System.out.println("invalid call");
             job.setToAbnormalTermination();
             return false;
         }
@@ -172,11 +189,11 @@ public class SYSTEM {
     public int getClk(){
         return CLOCK;
      }
-    public int getJobsDelivered(){
-    	return jobsDelivered;
+    public void setCLOCK(int time){
+        CLOCK = time;
     }
 
-
-
-
+    public int getJobsDelivered() {
+        return jobsDelivered;
+    }
 }

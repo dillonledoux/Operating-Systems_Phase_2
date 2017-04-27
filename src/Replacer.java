@@ -1,3 +1,5 @@
+import java.util.ArrayList;
+
 /**
  * Created by dillonledoux on 4/23/17.
  */
@@ -11,61 +13,45 @@ public class Replacer {
         mem_manager = memIn;
     }
 
-    public int findVictim(int pageTableAddress){
-        int victimAddress;
+    public int findVictim(int pageTableAddress) {
+        for (int i = 0; i < 4; i++) {
+            Page[] pgTbl = mem_manager.getPtLib()
+                    .get(pageTableAddress);
 
-        outerloop:
-        while(true){
-            for(int i = 0; i<128; i++) {
-                // returns the first page that is resident but also
-                // unreferenced and unmodified
-                if (!mem_manager.getPageTables().get(pageTableAddress)
-                        .get(i).isReferenced() && !mem_manager.getPageTables()
-                        .get(pageTableAddress).get(i).isModified() &&
-                        mem_manager.getPageTables().get(pageTableAddress)
-                        .get(i).isResident()) {
-                    victimAddress = i;
-                    break outerloop;
+            for (int j = 0; j < 128; j++) {
+                if (i == 0) {
+                    if (pgTbl[j].isReferenced() == false &&
+                            pgTbl[j].isModified() == false) {
+                        return j;
+                    }
+                } else if (i == 1) {
+                    if (pgTbl[j].isReferenced() == false &&
+                            pgTbl[j].isModified() == true) {
+                        return j;
+                    }
+                } else if (i == 2) {
+                    if (pgTbl[j].isReferenced() == true &&
+                            pgTbl[j].isModified() == false) {
+                        return j;
+                    }
+                } else {
+                    if (pgTbl[j].isReferenced() == true &&
+                            pgTbl[j].isModified() == true) {
+                        return j;
+                    }
                 }
             }
-            // returns the first page that is modified but not referenced
-            for(int i = 0; i<128; i++) {
-                if (!mem_manager.getPageTables().get(pageTableAddress)
-                        .get(i).isReferenced() && mem_manager.getPageTables()
-                        .get(pageTableAddress).get(i).isModified()) {
-                    victimAddress = i;
-                    break outerloop;
-                }
-            }
-            // returns the first page that is referenced but not modified
-            for(int i = 0; i<128; i++) {
-                if(mem_manager.getPageTables().get(pageTableAddress)
-                        .get(i).isReferenced() && !mem_manager.getPageTables()
-                        .get(pageTableAddress).get(i).isModified()) {
-                    victimAddress = i;
-                    break outerloop;
-                }
-            }
-            // returns the first page that is referenced and modified
-            for(int i = 0; i<128; i++) {
-                if (mem_manager.getPageTables().get(pageTableAddress)
-                        .get(i).isReferenced() && mem_manager.getPageTables()
-                        .get(pageTableAddress).get(i).isModified()) {
-                    victimAddress = i;
-                    break outerloop;
-                }
-            }
-
         }
+        return -2;
+    }
+
+
+    public void clearReferenceBits(int pageTableAddress){
         for(int i = 0; i<128; i++) {
-            mem_manager.getPageTables().get(pageTableAddress)
-                    .get(i).clearReference();
+            mem_manager.clearReferenceBit(pageTableAddress, i);
         }
-
-
-
-
-        return victimAddress;
     }
 
 }
+
+

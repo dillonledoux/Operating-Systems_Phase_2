@@ -38,9 +38,12 @@ public class LogWriter {
 
 	private void setupMemStatFile(){
 		String header = "Mem_Stat file starting at CSX time of "+ SYSTEM.systemStartTime+
-				" \n\nNormal|Job ID|Job Size|Allocated|Internal|   Length  | Page |Clean Pg|Dirty Pg|Utilization Stats|"
-				+  "\n Term.|Number|(Bytes) |  Frames |  Frag. |Ref. String|Faults|  Repl. |  Repl. |Free Fr.|Allo Fr.|"
-				+  "\n*************************************************************************************************\n";
+				" \n\nNormal|Job| Job |Alloca|Int. |Length| Page " +
+				"|Clean|Dirty|     Stats     |"
+				+  "\n Term.|ID |Size |Frames|Frag |" +
+				"String|Faults| Rep | Rep |   FF  |   AF  |"
+				+
+				"\n************************************************************************\n";
 		File file = new File(MEM_STAT_PATH);
 		try{
 			file.createNewFile();
@@ -55,12 +58,13 @@ public class LogWriter {
 
 	// writes to the mem_stat file after every fourth job termination
 	public void intervalWriteToMemStat(){
-		String toWrite = String.format("   -   |  -   |   -    |    -    |" +
-						"   -    |     -     |  -   |   -    |   -    |%-5f   |%-5f   |", mem.getPercentFreeFrames(),
+		String toWrite = String.format("=====================================" +
+						"==================|  %-4.1f |  %-4.1f " +
+						"|",	mem.getPercentFreeFrames(),
 				mem.getPercentAllocatedFrames());
 
 		String dottedLine =  "\n----------------------------------" +
-				"---------------------------------------------------------------\n";
+				"--------------------------------------\n";
 		File file = new File(MEM_STAT_PATH);
 		try{
 			FileWriter append = new FileWriter(file, true);
@@ -74,16 +78,16 @@ public class LogWriter {
 	}
 
 	public void releaseWriteToMemStat(PCB job){
-		String toWrite = String.format("%-5d |%-5d  |%-5d  |%-5d  | " +
-						"%-5d | %-5d | %-5d | %-5d | %-5d |   -   |   -   |",
-				job.isNormalTermination(), job.getJobID(),
+		String toWrite = String.format(" %s | %-2d|%-5d|  %-3d | " +
+						"%-3d | %-5d|  %-4d| %-4d|  %-3d|   -   |   -   |",
+				Boolean.toString(job.isNormalTermination()), job.getJobID(),
 				job.getJobSize(), job.getAllocatedFrames(), job
 						.getInternalFragmentation(),
 				job.getOriginalReferenceStringSize(), job.getNumberOfPageFaults(),
 				job.getCleanPageReplacements(), job.getDirtyPageReplacements() );
 
 		String dottedLine =  "\n----------------------------------" +
-				"---------------------------------------------------------------\n";
+				"--------------------------------------\n";
 
 		File file = new File(MEM_STAT_PATH);
 		try{
@@ -97,11 +101,11 @@ public class LogWriter {
 		}
 	}
 
-	private void setupTraceFile(){
+	public void setupTraceFile(){
 		String header = "Trace file starting at CSX time of "+ SYSTEM.systemStartTime+
 				" \n\nJob ID|Placed/Replaced| Frame |       Page Status     |" +
 				"\nNumber|     Page      |Numbers| Referenced | Modified |" +
-				"\n*******************************************************";
+				"\n*******************************************************\n";
 		File file = new File(TRACE_PATH);
 		try{
 			file.createNewFile();
@@ -114,11 +118,28 @@ public class LogWriter {
 		}
 	}
 
-	public void writeToTraceFile(PCB job, PTEntry entry, int pgNumber){
-		String toWrite = String.format("%-5d | %-5d | %-5d | %-5d | %-5d", job.getJobID(),
+	public void writeToTraceFile(PCB job, int pgNumber){
+		Page entry = mem.getPage(job, pgNumber);
+		String toWrite = String.format("  %-3d |      %-5d    |  %-4d " +
+						"|   %s    |  %s   |", job
+						.getJobID(),
 				pgNumber, entry.getFrameNumber(),
-				entry.isReferenced(), entry.isModified());
-//		todo Do we need to deal with the dirty bit or write a special message?
+				Boolean.toString(entry.isReferenced()), Boolean.toString(entry
+						.isModified()));
+		String dottedLine =  "\n----------------------------------" +
+				"---------------------\n";
+		File file = new File(TRACE_PATH);
+		try{
+			FileWriter append = new FileWriter(file, true);
+			append.write(toWrite);
+			append.write(dottedLine);
+			append.close();
+		}
+		catch(IOException e){
+			System.out.println("Error writing to TRACE file during release");
+		}
+
+
 	}
 
 }

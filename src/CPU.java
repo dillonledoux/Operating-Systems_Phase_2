@@ -31,69 +31,96 @@ public class CPU{
 	 * but to wait for the object in the blockedQ to complete, the
 	 * clock will be incremented appropriately. 
 	 */
-	public void execute(){	
+	public void execute(){
 		boolean noJob = true;
+		boolean isJobInRQ = false;
+		if(scheduler.getRQSize()>0) {
+			isJobInRQ = true;
+		}
 		while(scheduler.getRQSize()>0) {
 			noJob = false;
 			PCB job = scheduler.getNextPCB();
-			int remainingTime = job.getQuantum();
-			while (job.isQuantumExpired() == false) {
+			int quantum = job.getQuantum();
+			int timeInCurrentQuantum = 0;
+			while (job.isQuantumExpired() == false && job.getReferenceString
+					().size() != 0) {
 
 				ReferenceStringEntry currentEntry = scheduler
 						.getNextInstruction(job);
 				String instrCode = currentEntry.getCode();
 				int pageNumber = currentEntry.getPageNumber();
-
-				if(mem_manager.getPageTables().get((job.getPageTableBaseAddress
-						())).get(pageNumber).isResident()){
-
-					mem_manager.getPageTables().get((job.getPageTableBaseAddress
-							())).get(pageNumber).setReference(true);
-
-				}
-				else{
-
+				if(mem_manager.isPageResident(job.getPageTableBaseAddress(),
+						pageNumber) == false){
 					// if the job is found to be not valid, then it breaks
 					// this iteration of the loop.
-					if(system.pageNotResidentAction(job, pageNumber)==true){
+					boolean result = system.pageNotResidentAction(job,
+							pageNumber);
+					if(result==true){
 						job.getReferenceString().add(0, currentEntry);
-						scheduler.moveFromRtoB(job);
+						scheduler.pageFaultBlock(job);
+						// todo changes ok?
 					}
-					system.jobTerminated(job);
-					break;
+					else {
+						System.out.println(job.getJobID());
+						system.jobTerminated(job);
+						job.clearReferenceString();
+					}
+
+					return;
+
 				}
 
+				mem_manager.setReferenceBit(job.getPageTableBaseAddress(),
+						pageNumber);
 				system.incrSysClock(2);
-				remainingTime-=2;
+				timeInCurrentQuantum+=2;
 				if(instrCode.equals("p")){
-					if(remainingTime<2){
-						scheduler.quantumExpiredAction(job);
+					if(timeInCurrentQuantum==quantum){
+						if(scheduler.quantumExpiredAction(job)==false){
+							return;
+						}
 					}
 				}
-				else if(instrCode.equals("w")){
-					scheduler.moveFromRtoB(job);
-					mem_manager.getPageTables().get((job.getPageTableBaseAddress
-							())).get(pageNumber).setModified(true);
-				}
-				else if(instrCode.equals("r")){
-					if(remainingTime>0){
-						scheduler.ioRequestBeforeQuantumExpireAction(job);
+				else if(instrCode.equals("w")) {
+					mem_manager.setModifiedBit(job.getPageTableBaseAddress(),
+							pageNumber);
+					if (timeInCurrentQuantum<quantum) {
+						if(scheduler.ioRequestBeforeQuantumExpireAction(job)
+								==false){
+							return;
+						}
 					}
-					scheduler.moveFromRtoB(job);
-//					If an io burst is the last action, the termination is
-// handled in the checkBlockedQ method in scheduler
+					else {
+						if(scheduler.ioRequestAndQuantumExpire(job)==false){
+							return;
+						}
+
+					}
+				}
+				else if(instrCode.equals("r")) {
+					if (timeInCurrentQuantum < quantum) {
+						if (scheduler.ioRequestBeforeQuantumExpireAction(job)
+								== false) {
+							return;
+						}
+					} else {
+						if (scheduler.ioRequestAndQuantumExpire(job) == false) {
+							return;
+						}
+					}
 				}
 				else{
 					System.out.println("Encountered an weird character: " +
 							currentEntry.getCode() + " in reference string");
 					System.exit(1);
 				}
+
 			}
 		}
-		if(noJob){
+		if(isJobInRQ==false){
 			noJobWait();
+			return;
 		}
-
 	}
 	/**
 	 * When no job can execute and the blockedQ must be waited on,
@@ -102,11 +129,10 @@ public class CPU{
 	 */
 	public boolean noJobWait(){
 		if(scheduler.getBlockedQ().size()>0){		
-			int incrBy = scheduler.getBlockedQ().peek().getTimeFinishIO()-system.getClk();
-			if(incrBy<0){
-				incrBy = 0;
-			}
-			system.incrSysClock(incrBy);
+			int newTime = scheduler.getBlockedQ().peek().
+					getTimeFinishIO();
+
+			system.setCLOCK(newTime);
 			return true;
 		}
 		return false;

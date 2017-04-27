@@ -18,7 +18,6 @@ public class Scheduler {
     private Queue sbq2;  //subqueue 2
     private Queue sbq3;  //subqueue 3
     private Queue sbq4;  //subqueue 4
-    
     private Queue blockedQ;
 
 //		---Constructor---  
@@ -56,33 +55,59 @@ public class Scheduler {
 //todo need to think about the entries in the job file
 
 	public ReferenceStringEntry getNextInstruction(PCB job){
-	    ReferenceStringEntry currentActionEntry =
-				job.getReferenceString().remove(0);
-		return currentActionEntry;
+		return job.getReferenceString().remove(0);
     }
 
-	public void quantumExpiredAction(PCB job) {
+	public boolean quantumExpiredAction(PCB job) {
 		if (job.getReferenceString().isEmpty() == false) {
 			updateQandT(job);
 			endQuantumResch(job);
+			return true;
+		}
+		else{
+			System.out.println(job.getJobID());
+			system.jobTerminated(job);
+			return false;
+		}
+	}
+	public boolean ioRequestBeforeQuantumExpireAction(PCB job){
+		if(job.getReferenceString().isEmpty() == false) {
+			moveFromRtoB(job);
+			job.resetTurns();
+			return true;
 		}
 		else{
 			system.jobTerminated(job);
+			return false;
 		}
 	}
-	public void ioRequestBeforeQuantumExpireAction(PCB job){
-		moveFromRtoB(job);
-		job.resetTurns();
+	public boolean ioRequestAndQuantumExpire(PCB job){
+		if(job.getReferenceString().isEmpty() == false) {
+			moveFromRtoB(job);
+			updateQandT(job);
+			return true;
+		}
+		else{
+			system.jobTerminated(job);
+			return false;
+		}
 	}
-
 	
 //		---Queue Mutators---
-	
+
+	//adds a given job to the ready Q into subQ-1
     public void addToReadyQ(PCB job){
     	job.assignTurns(1);
         sbq1.add(job);        
     } 
+
     // Moves a task form the ReadyQ to the BlockedQ because of I/O
+	//
+
+	public void pageFaultBlock(PCB job){
+		blockedQ.add(job);
+		job.setTimeFinishIO(system.getClk()+10);
+	}
     public void moveFromRtoB(PCB job){
         blockedQ.add(job);
         if(job.getSubQNumber()==4){
@@ -90,7 +115,8 @@ public class Scheduler {
         	job.resetTurns();
         }
         job.incrIOReq();
-        job.setTimeFinishIO(system.getClk());
+        job.setTimeFinishIO(system.getClk()+12);
+    // todo need to worry about page faulting vs disk i/o
     }
 
     // Checks Blocked_Q to see if a job has finished I/O and reschedules if true
@@ -104,6 +130,7 @@ public class Scheduler {
     		else{
     			job = blockedQ.pop();
     			if(job.getReferenceString().isEmpty()){
+
     				system.jobTerminated(job);
 				}
     			else{
@@ -112,6 +139,7 @@ public class Scheduler {
     		}
     	}    		
     }
+
     //Constructs the PCB object from an ArrayList
     public PCB createPCB(ArrayList<String> list){
 	    int jID = Integer.parseInt(list.remove(0));
@@ -123,20 +151,21 @@ public class Scheduler {
 		PCB pcb = new PCB(jID, jSize, programCounter, refString); // adding job id
 		// and size
 
-		ArrayList<PTEntry> pageTable = new ArrayList<>();
+		Page[] newEntry = new Page[128];
 		int entries = 0;
 		while(entries<128){
-			pageTable.add(new PTEntry());
+			newEntry[entries] = new Page();
 			entries++;
 		}
+		pcb.setPageTableBaseAddress(mem_manager.addPageTable(newEntry));
 
 		return pcb;
     }
     public ArrayList<ReferenceStringEntry> constructReferenceString(String address){
 		ArrayList<ReferenceStringEntry> list = new ArrayList<>();
     	Scanner scannerJbX;
-        File jbX;
-    	jbX = new File(address);
+//todo change the absolute file reference to a dynamic one
+    	File jbX = new File("/Users/dillonledoux/Desktop/jobs/"+address);
         try{
             scannerJbX = new Scanner(jbX);
 			while(scannerJbX.hasNextLine()) {
@@ -145,7 +174,7 @@ public class Scheduler {
 			}
         }
         catch(Exception e){
-            System.out.println("Could not load from jb" +address);
+            System.out.println("Could not load from " +address);
             System.exit(1);
         }
 

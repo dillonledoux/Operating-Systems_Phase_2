@@ -285,6 +285,9 @@ public class PCB {
 	public int getOriginalReferenceStringSize() {
 		return originalReferenceStringSize;
 	}
+	public void clearReferenceString(){
+		referenceString.clear();
+	}
 
 
 
