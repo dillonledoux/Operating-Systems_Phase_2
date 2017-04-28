@@ -91,6 +91,7 @@ public class SYSTEM {
     		 loader.loadTasks();
     		 cpu.execute();
     	}
+    	logger.intervalWriteToMemStat();
     	System.out.println("Simulation complete");
      }     
      /** 
@@ -143,13 +144,14 @@ public class SYSTEM {
                 loader.loadFrameWithPage(job.getPageTableBaseAddress(),
                         pageNumber, mem_manager.allocate());
                 job.incrAllocatedFrames();
-                logger.writeToTraceFile(job, pageNumber);
+                logger.writeToTraceFileLoad(job, pageNumber);
             }
             else{
+                System.out.println(replacer.findVictim(job.getPageTableBaseAddress()));
                 int victim = replacer.findVictim(job.getPageTableBaseAddress());
-                logger.writeToTraceFile(job, victim);
+                logger.writeToTraceFileREPlace(job, pageNumber, victim);
                 if(mem_manager.getModifiedBit(job.getPageTableBaseAddress(),
-                        pageNumber)){
+                        victim)){
 
                     job.incrDirtyPageReplacements();
                 }
@@ -160,9 +162,11 @@ public class SYSTEM {
                         victim);
 
                 replacer.clearReferenceBits(job.getPageTableBaseAddress());
-
+                mem_manager.setResidentBit(job.getPageTableBaseAddress(),
+                        pageNumber);
             }
             mem_manager.setResidentBit(job.getPageTableBaseAddress(), pageNumber);
+            mem_manager.setReferenceBit(job.getPageTableBaseAddress(), pageNumber);
 
             return true;
         }

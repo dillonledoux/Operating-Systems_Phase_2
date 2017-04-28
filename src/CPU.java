@@ -41,20 +41,22 @@ public class CPU{
 		while(scheduler.getRQSize()>0) {
 			noJob = false;
 			PCB job = scheduler.getNextPCB();
+
+
 			int quantum;
 			while (job.isQuantumExpired() == false && job.getReferenceString
 					().size() != 0) {
 				quantum = job.getQuantum();
 				ReferenceStringEntry currentEntry = scheduler
 						.getNextInstruction(job);
-				String instrCode = currentEntry.getCode();
-				int pageNumber = currentEntry.getPageNumber();
+
+
 				if(mem_manager.isPageResident(job.getPageTableBaseAddress(),
-						pageNumber) == false){
+						currentEntry.getPageNumber()) == false){
 					// if the job is found to be not valid, then it breaks
 					// this iteration of the loop.
 					boolean result = system.pageNotResidentAction(job,
-							pageNumber);
+							currentEntry.getPageNumber());
 					if(result==true){
 						job.getReferenceString().add(0, currentEntry);
 						scheduler.pageFaultBlock(job);
@@ -68,10 +70,10 @@ public class CPU{
 				}
 
 				mem_manager.setReferenceBit(job.getPageTableBaseAddress(),
-						pageNumber);
+						currentEntry.getPageNumber());
 				system.incrSysClock(2);
 				timeInCurrentQuantum+=2;
-				if(instrCode.equals("p")){
+				if(currentEntry.getCode().equals("p")){
 					if(timeInCurrentQuantum==quantum){
 						timeInCurrentQuantum = 0;
 						scheduler.quantumExpiredAction(job);
@@ -82,10 +84,10 @@ public class CPU{
 						return;
 					}
 				}
-				else if(instrCode.equals("w")) {
-					System.out.print("");
+				else if(currentEntry.getCode().equals("w")) {
+
 					mem_manager.setModifiedBit(job.getPageTableBaseAddress(),
-                            pageNumber);
+                            currentEntry.getPageNumber());
 					timeInCurrentQuantum = 0;
 					if (timeInCurrentQuantum < quantum) {
 						scheduler.ioRequestBeforeQuantumExpireAction(job);
@@ -97,7 +99,7 @@ public class CPU{
 
 					return;
 				}
-				else if(instrCode.equals("r")) {
+				else if(currentEntry.getCode().equals("r")) {
 					timeInCurrentQuantum = 0;
 					if (timeInCurrentQuantum < quantum) {
 						scheduler.ioRequestBeforeQuantumExpireAction(job);

@@ -64,11 +64,6 @@ public class Mem_manager {
 		for(int i = 0; i<job.getJobSizeInPages(); i++) {
 			ptLib.get(job.getPageTableBaseAddress())[i].setVi(1);
 		}
-		for(int i = 0; i<128; i++){
-			ptLib.get(job.getPageTableBaseAddress())[i].clearResident();
-			ptLib.get(job.getPageTableBaseAddress())[i].clearReference();
-			ptLib.get(job.getPageTableBaseAddress())[i].clearModified();
-		}
 	}
 
 //		---Getter and Logging---
@@ -108,7 +103,9 @@ public class Mem_manager {
 										 int newFrameNumber){
 		ptLib.get(ptBaseAddress)[pgNumber].
 				setFrameNumber(newFrameNumber);
+
 	}
+
 	public void clearResidentBit(int ptBaseAddress, int pgNumber){
 		ptLib.get(ptBaseAddress)[pgNumber].clearResident();
 	}
@@ -121,6 +118,10 @@ public class Mem_manager {
 	public boolean isPageResident(int ptBaseAddr, int pgNumber){
 		return ptLib.get(ptBaseAddr)[pgNumber].isResident();
 	}
+	public boolean getReferenceBit(int ptBaseAddress, int pgNumber){
+		return ptLib.get(ptBaseAddress)[pgNumber].isReferenced();
+	}
+
 	public void setReferenceBit(int ptBaseAddr, int pgNumber){
 		ptLib.get(ptBaseAddr)[pgNumber].setReference(true);
 	}
@@ -140,11 +141,5 @@ public class Mem_manager {
 		ptLib.get(ptBaseAddr)[pgNumber].clearModified();
 	}
 
-	public double getPercentFreeFrames(){
-		return (fft.size()/TOTAL_FRAMES)*100;
-	}
-	public double getPercentAllocatedFrames(){
-		return ((TOTAL_FRAMES-fft.size())/TOTAL_FRAMES)*100;
-	}
 	//collects the memory statistics at the time invoked
 }

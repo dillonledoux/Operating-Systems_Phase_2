@@ -166,8 +166,7 @@ public class Scheduler {
 		ArrayList<ReferenceStringEntry> list = new ArrayList<>();
     	Scanner scannerJbX;
 //todo change the absolute file reference to a dynamic one
-    	File jbX = new File("C:\\Users\\Dillon " +
-				"LeDoux\\Desktop\\Phase_2_Input_Files\\"+address);
+    	File jbX = new File("/Users/dillonledoux/Desktop/jobs/"+address);
         try{
             scannerJbX = new Scanner(jbX);
 			while(scannerJbX.hasNextLine()) {
