@@ -1,10 +1,10 @@
-/*
- * ---Description---
- * This class serves as the CPU and executes tasks
- * supplied to it.  The CPU's main function in this
- * implementation is to increment the clock time 
- * representing a job being executed.
- */
+/**
+  * ---Description---
+  * This class serves as the CPU and executes tasks
+  * supplied to it.  The CPU's main function in this
+  * implementation is to increment the clock time
+  * representing a job being executed.
+  */
 public class CPU{
 	SYSTEM system;
 	Scheduler scheduler;
@@ -26,10 +26,11 @@ public class CPU{
 	 * This method handles the program execution actions.
 	 * 1) It checks to make sure there is something that can
 	 * be executed in the readyQ, 2) the next job is called 
-	 * from the scheduler, 3) the execution time is acquired
-	 * and the system clock is incremented appropriately.  If
-	 * there is no job that can be executed and there is no option 
-	 * but to wait for the object in the blockedQ to complete, the
+	 * from the scheduler, 3) the next instruction is fetched.  If the
+	 * page is resident it will execute but if not, the SYSTEM will be
+	 * called to load the required page.  If
+	 * there is no job that can be executed and there is no
+	 * option but to wait for the object in the blockedQ to complete, the
 	 * clock will be incremented appropriately. 
 	 */
 	public void execute(){
@@ -41,16 +42,12 @@ public class CPU{
 		while(scheduler.getRQSize()>0) {
 			noJob = false;
 			PCB job = scheduler.getNextPCB();
-
-
 			int quantum;
 			while (job.isQuantumExpired() == false && job.getReferenceString
 					().size() != 0) {
 				quantum = job.getQuantum();
 				ReferenceStringEntry currentEntry = scheduler
 						.getNextInstruction(job);
-
-
 				if(mem_manager.isPageResident(job.getPageTableBaseAddress(),
 						currentEntry.getPageNumber()) == false){
 					// if the job is found to be not valid, then it breaks
@@ -68,11 +65,12 @@ public class CPU{
 					}
 					return;
 				}
-
 				mem_manager.setReferenceBit(job.getPageTableBaseAddress(),
 						currentEntry.getPageNumber());
+
 				system.incrSysClock(2);
 				timeInCurrentQuantum+=2;
+
 				if(currentEntry.getCode().equals("p")){
 					if(timeInCurrentQuantum==quantum){
 						timeInCurrentQuantum = 0;
@@ -85,13 +83,11 @@ public class CPU{
 					}
 				}
 				else if(currentEntry.getCode().equals("w")) {
-
 					mem_manager.setModifiedBit(job.getPageTableBaseAddress(),
                             currentEntry.getPageNumber());
 					timeInCurrentQuantum = 0;
 					if (timeInCurrentQuantum < quantum) {
 						scheduler.ioRequestBeforeQuantumExpireAction(job);
-
 					}
 					else {
 						scheduler.ioRequestAndQuantumExpire(job);

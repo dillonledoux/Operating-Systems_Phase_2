@@ -1,10 +1,10 @@
-/*
- * --Description--
- * This class serves as a data structure for holding
- * all the necessary information about a job in the 
- * system and allows other classes to access this info
- * when requested.   
- */
+/**
+  * --Description--
+  * This class serves as a data structure for holding
+  * all the necessary information about a job in the
+  * system and allows other classes to access this info
+  * when requested.
+  */
 import java.util.ArrayList;
 
 public class PCB {
@@ -13,19 +13,16 @@ public class PCB {
 	private int jobID;
 	private int jobSize; // memory required for job (in bytes)
 	private int timeArrival;	// time job entered the system
-	private int timeDelivered;  // time job terminated
-	private int timeUsed;		// cumulative CPU time used by the job
 	private int timeFinishIO;	// time the job will finish an IO request
-	private int IoReq;          // number of I/O requests
 	private int subQ = 1;       //current subqueue, initially in subQ1
 	private int subQTurns = 3;  //turns spent in given subqueue;
 
-// -- Phase 2 Addition --
-	private int programCounter;
+	// -- Phase 2 Addition --
+	private int programCounter;		// address for the reference string file
 	private int jobSizeInPages;
-	private int maxAllocatableFrames;
+	private int maxAllocatableFrames;// maximum frames which the job can fill
 	private int allocatedFrames = 0;
-	private int pageTableBaseAddress;
+	private int pageTableBaseAddress;//address to the job's page table
 	private int numberOfPageFaults;
 	private int numberOfReplacements;
 	private int internalFragmentation;
@@ -37,7 +34,14 @@ public class PCB {
 	private  ArrayList<ReferenceStringEntry>
 			referenceString = new ArrayList<ReferenceStringEntry>();
 
-	//  --- Constructor ---
+	/**
+	 * Constructor
+	 * Sets up the PCB object
+	 * @param id job id
+	 * @param size job size in bytes
+	 * @param counter program counter
+	 * @param refString list of job instructions
+	 */
 	public PCB(int id, int size, int counter, ArrayList<ReferenceStringEntry>
 			refString){
 		jobID = id;
@@ -45,14 +49,16 @@ public class PCB {
 		programCounter = counter;
 		referenceString = refString;
 
+		// converts the job size from bytes to the number of pages
+		// necessary to hold it
 		jobSizeInPages = (int) Math.ceil((jobSize/256.0));
+
+		//the job size in pages divided by 4 then rounded up
 		maxAllocatableFrames = (int) Math.ceil(jobSizeInPages*0.25);
 
+		// the amount of free space left in the last allocated page
 		internalFragmentation = (jobSizeInPages*256)-jobSize;
 		originalReferenceStringSize = refString.size();
-
-		// populates the page table with empty entries
-
 	}
 
 //		---Object Functions---
@@ -60,6 +66,7 @@ public class PCB {
 	 * Assigns the appropriate number of turns based
 	 * on the number supplied which represents the
 	 * subQ number the job resides in.
+	 * @param n subqueue number
 	 */
     public void assignTurns(int n){
         switch (n){
@@ -73,18 +80,32 @@ public class PCB {
                     break;
         }
     }
-    	
-//		---Setters and Getters---
+
+	/**
+	 * resets teh number of turns a job has based on the subquue
+	 * in which it resides
+	 */
+	public void resetTurns(){
+		switch (subQ){
+			case 1: subQTurns = 3;
+				break;
+			case 2: subQTurns = 5;
+				break;
+			case 3: subQTurns = 6;
+				break;
+			default: subQTurns = 2147483647;
+				break;
+		}
+	}
+
+	/**
+	 * Getters, Setters, Mutators
+	 *
+	 * Getters, Setters, and Mutators for each necessary
+	 * variable
+	 */
 	public void setTimeFinishIO(int clkIn){
 		timeFinishIO = clkIn;
-	}
-
-	public void setArrivalTime(int time){
-		timeArrival = time;
-	}
-
-	public void setTimeDelivered(int time){
-		timeDelivered = time;
 	}
 
 	public void setSubQ(int number){
@@ -101,10 +122,6 @@ public class PCB {
 
 	public int getJobSize(){
 		return jobSize;
-	}
-
-	public int getTimeArrival(){
-		return timeArrival;
 	}
 
 	/**
@@ -134,46 +151,8 @@ public class PCB {
         return subQ;
     }
 
-//		---Mutators--- 
-	public void incrIoRequests(){
-	    IoReq++;
-	}
-
-    public void incrementTurns(){
-	    subQTurns++;
-	}
-
 	public void decrementTurns(){
 	    subQTurns--;
-	}
-
-	public void incrTimeUsed(){
-	    timeUsed++;
-	}
-
-	public void incrTimeUsed(int value){
-	    timeUsed += value;
-	}
-
-	public void incrIOReq(){
-	    IoReq++;
-	}
-
-	public void resetTurns(){
-	    switch (subQ){
-            case 1: subQTurns = 3;
-                    break;
-            case 2: subQTurns = 5;
-                    break;
-            case 3: subQTurns = 6;
-                    break;
-            default: subQTurns = 2147483647;
-                    break;
-        }
-	}
-
-	public int getProgramCounter() {
-		return programCounter;
 	}
 
 	public int getJobSizeInPages() {
@@ -188,28 +167,12 @@ public class PCB {
 		return numberOfPageFaults;
 	}
 
-	public int getNumberOfReplacements() {
-		return numberOfReplacements;
-	}
-
-	public void setProgramCounter(int programCounter) {
-		this.programCounter = programCounter;
-	}
-
-	public void setJobSizeInPages(int jobSizeInPages) {
-		this.jobSizeInPages = jobSizeInPages;
-	}
-
 	public void setPageTableBaseAddress(int pageTableBaseAddress) {
 		this.pageTableBaseAddress = pageTableBaseAddress;
 	}
 
 	public void incrNumberOfPageFaults() {
 		this.numberOfPageFaults++;
-	}
-
-	public void incrNumberOfReplacements() {
-		this.numberOfReplacements++;
 	}
 
 	public boolean isNormalTermination() {
@@ -236,29 +199,8 @@ public class PCB {
 		dirtyPageReplacements++;
 	}
 
-
-
 	public boolean isQuantumExpired() {
 		return quantumExpired;
-	}
-
-	public void setQuantumExpired(boolean quantumExpired) {
-		this.quantumExpired = quantumExpired;
-	}
-
-	public ArrayList<ReferenceStringEntry>
-	getReferenceStringEntries() {
-		return referenceString;
-	}
-
-	public void setReferenceStringEntry(ArrayList<ReferenceStringEntry> list){
-		referenceString = list;
-	}
-
-	public void addToReferenceStringEntries
-			(ReferenceStringEntry
-					 referenceStringEntry) {
-		referenceString.add(referenceStringEntry);
 	}
 
 	public ArrayList<ReferenceStringEntry> getReferenceString() {
@@ -268,12 +210,11 @@ public class PCB {
 	public int getAllocatedFrames() {
 		return allocatedFrames;
 	}
+
 	public void incrAllocatedFrames() {
 		allocatedFrames++;
 	}
-	public void decrAllocatedFrames(){
-		allocatedFrames--;
-	}
+
 	public int getMaxAllocatableFrames() {
 		return maxAllocatableFrames;
 	}
@@ -285,12 +226,8 @@ public class PCB {
 	public int getOriginalReferenceStringSize() {
 		return originalReferenceStringSize;
 	}
+
 	public void clearReferenceString(){
 		referenceString.clear();
 	}
-
-
-
 }
-
-

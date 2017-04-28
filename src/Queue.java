@@ -1,9 +1,9 @@
-/*
- * ---Description---
- * Queue serves as a custom data structure used to hold
- * PCBs in a queque fashion.  It extends ArrayList and
- * overrides many methods from the super.
- */
+/**
+  * ---Description---
+  * Queue serves as a custom data structure used to hold
+  * PCBs in a queque fashion.  It extends ArrayList and
+  * overrides many methods from the super.
+  */
 import java.util.ArrayList;
 
 public class Queue extends ArrayList<PCB>{

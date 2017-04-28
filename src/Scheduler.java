@@ -1,18 +1,20 @@
-/*
- *- --Description---
- * The Scheduler serves to schedule tasks for execution using a multi-level
- * feedback queue as well as maintain a blockedQ for tasks awaiting 
- * I/O requests.  There are four subqueues each with different quantum
- * definitions as well as turn definitions.
- */
+/**
+  * --Description---
+  * The Scheduler serves to schedule tasks for execution using a multi-level
+  * feedback queue as well as maintain a blockedQ for tasks awaiting
+  * I/O requests.  There are four subqueues each with different quantum
+  * definitions as well as turn definitions.
+  */
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Scanner;
 
 public class Scheduler {
-    
-//		---Class Variables---
-    SYSTEM system;
+
+	/**
+	 * Class Variables
+	 */
+	SYSTEM system;
     Mem_manager mem_manager;  
     private Queue sbq1;  //subqueue 1
     private Queue sbq2;  //subqueue 2
@@ -20,8 +22,14 @@ public class Scheduler {
     private Queue sbq4;  //subqueue 4
     private Queue blockedQ;
 
-//		---Constructor---  
-    
+	/**
+	 * Constructor
+	 *
+	 * Constructs the scheduler object and instantiates the
+	 * required queues
+	 * @param systemIn system object
+	 * @param mem_managerIn memory manager object
+	 */
     public Scheduler(SYSTEM systemIn, Mem_manager mem_managerIn){
         system = systemIn;
         mem_manager = mem_managerIn;
@@ -41,23 +49,27 @@ public class Scheduler {
 	public void setup(ArrayList<String> list){
 	    PCB job = createPCB(list);
 	    mem_manager.initializeViBits(job);
-		job.setArrivalTime(system.getClk());
 		addToReadyQ(job);
-	}	
-	/*
-	/**
-	 * This method returns execution time required for the current
-	 * execution slice as well as determine what should be done 
-	 * to the job once it has executed based on the current burst
-	 * size as well as the bursts remaining.  Once the job has finished
-	 * all the bursts, it terminates and and is removed from the system.
-	 */
-//todo need to think about the entries in the job file
+	}
 
+	/**
+	 * This method returns the next instruction in the reference string as
+	 * well as determine what should be done
+	 * to the job once it has executed based on the quantum remaining
+	 * as well as the actions taken.  Once the job has finished
+	 * all instructions it terminates and is removed from the system.
+	 */
 	public ReferenceStringEntry getNextInstruction(PCB job){
 		return job.getReferenceString().remove(0);
     }
 
+	/**
+	 * When a quantum expires and the last instrution was a processing
+	 * instruction, this serves to reschedule the job based on
+	 * subqueue
+	 * @param job currently executing job
+	 * @return	true if the job still has more instructions
+	 */
 	public boolean quantumExpiredAction(PCB job) {
 		if (job.getReferenceString().isEmpty() == false) {
 			updateQandT(job);
@@ -70,6 +82,13 @@ public class Scheduler {
 			return false;
 		}
 	}
+
+	/**
+	 * If there is an I/O request and there is still time left on the
+	 * job's quantum, this method is called to properly reschule the job
+	 * @param job currently executing job
+	 * @return true if the job still has more instructions
+	 */
 	public boolean ioRequestBeforeQuantumExpireAction(PCB job){
 		if(job.getReferenceString().isEmpty() == false) {
 			moveFromRtoB(job);
@@ -81,6 +100,13 @@ public class Scheduler {
 			return false;
 		}
 	}
+
+	/**
+	 * If there is an I/O request and the quantum is expired as well,
+	 * this method is called to reschedule the job appropriately
+	 * @param job currently executing job
+	 * @return true if there are more instructions
+	 */
 	public boolean ioRequestAndQuantumExpire(PCB job){
 		if(job.getReferenceString().isEmpty() == false) {
 			moveFromRtoB(job);
@@ -99,28 +125,36 @@ public class Scheduler {
     public void addToReadyQ(PCB job){
     	job.assignTurns(1);
         sbq1.add(job);        
-    } 
+    }
 
-    // Moves a task form the ReadyQ to the BlockedQ because of I/O
-	//
-
+	/**
+	 * When a page fault occurs, this method is called ot add
+	 * the job to the blockedQ to wait
+	 * @param job the job currently faulting
+	 */
 	public void pageFaultBlock(PCB job){
     	blockedQ.add(job);
 		job.setTimeFinishIO(system.getClk()+10);
 	}
-    public void moveFromRtoB(PCB job){
 
+	/**
+	 * When a job requests I/O, this method is called to move the
+	 * job to the blockedQ.
+	 * @param job
+	 */
+	public void moveFromRtoB(PCB job){
 		blockedQ.add(job);
         if(job.getSubQNumber()==4){
         	job.setSubQ(1);
         	job.resetTurns();
         }
-        job.incrIOReq();
         job.setTimeFinishIO(system.getClk()+12);
-    // todo need to worry about page faulting vs disk i/o
     }
 
-    // Checks Blocked_Q to see if a job has finished I/O and reschedules if true
+	/**
+	 * Checks the blocked queue to see if any of the jobs have finished
+	 * their actions, if so, then the jobs are rescheduled to the readyQ
+	 */
     public void checkBlockedQ(){
 		boolean enoughTime = true;
     	while(enoughTime && !blockedQ.isEmpty()){
@@ -141,17 +175,21 @@ public class Scheduler {
     	}    		
     }
 
-    //Constructs the PCB object from an ArrayList
-    public PCB createPCB(ArrayList<String> list){
+	/**
+	 * Constructs the PCB object from an ArrayList
+	 * @param list arraylist of job information
+	 * @return constructed PCB of the job
+	 */
+	public PCB createPCB(ArrayList<String> list){
 	    int jID = Integer.parseInt(list.remove(0));
 	    int jSize = Integer.parseInt(list.remove(0));
 		String refStringFileAddress = list.remove(0);
         ArrayList<ReferenceStringEntry> refString = constructReferenceString
 				(refStringFileAddress);
 		int programCounter = (refString.size()-1);
-		PCB pcb = new PCB(jID, jSize, programCounter, refString); // adding job id
-		// and size
+		PCB pcb = new PCB(jID, jSize, programCounter, refString);
 
+		// constructs a new page table
 		Page[] newEntry = new Page[128];
 		int entries = 0;
 		while(entries<128){
@@ -162,11 +200,18 @@ public class Scheduler {
 
 		return pcb;
     }
-    public ArrayList<ReferenceStringEntry> constructReferenceString(String address){
+
+	/**
+	 * Given an address to the reference string file, this method constructs
+	 * an arraylist of ReferenceStringEntry objects holding the appropriate
+	 * values
+	 * @param address points the the reference string file fo the job
+	 * @return returns an Arraylist of the reference string entries
+	 */
+	public ArrayList<ReferenceStringEntry> constructReferenceString(String address){
 		ArrayList<ReferenceStringEntry> list = new ArrayList<>();
     	Scanner scannerJbX;
-//todo change the absolute file reference to a dynamic one
-    	File jbX = new File("/Users/dillonledoux/Desktop/jobs/"+address);
+    	File jbX = new File(system.getDirLocation()+""+address);
         try{
             scannerJbX = new Scanner(jbX);
 			while(scannerJbX.hasNextLine()) {
@@ -178,7 +223,6 @@ public class Scheduler {
             System.out.println("Could not load from " +address);
             System.exit(1);
         }
-
         return list;
     }
         
@@ -196,7 +240,12 @@ public class Scheduler {
             job.resetTurns();  
         }
 	}
-    //Adds the given job to the subqueue denoted by the given int
+
+	/**
+	 * Adds the given job to the subqueue denoted by the given int
+	 * @param number the subqueue number to which it will be added
+	 * @param job	the job to be addedd
+	 */
     public void addToSubQ(int number, PCB job ){
     	if(number == 1){
     		sbq1.add(job);
@@ -211,6 +260,7 @@ public class Scheduler {
     		sbq4.add(job);
     	}
     }
+
     /**
      * At the end of a quantum, a job must be rescheduled
      * back into the subqueue from which it came and this
@@ -228,15 +278,23 @@ public class Scheduler {
             default:sbq4.add(job);
         }
     }
-    // Moves a job to a lower queue
-    public void demote(PCB job){
+
+	/**
+	 * Moves a job from one queue to a lower queue
+	 * @param job job to be moved
+	 */
+	public void demote(PCB job){
         if(job.getSubQNumber()<4){
 	        job.setSubQ(job.getSubQNumber()+1);
         }    
     }
 //		---Getters---   
-    // returns the number of the highest queue which has elements
-    public int getHighestNonEmptySbqNumber(){
+
+	/**
+	 * Gets the number of the highest priority subqueue which is not empty
+	 * @return the number the highest sQ
+	 */
+	public int getHighestNonEmptySbqNumber(){
     	if(!sbq1.isEmpty()){
     		return 1;
     	}
@@ -260,18 +318,31 @@ public class Scheduler {
     		case 3: return sbq3;
     		default: return sbq4;
     	}
-    }     
-    public PCB getNextPCB(){
+    }
+
+	/**
+	 * Gets the next job from the ready queue in the order of priority
+	 *
+	 * @return the job which is next in line
+	 */
+	public PCB getNextPCB(){
     	PCB job = getSubQ(getHighestNonEmptySbqNumber()).remove(0);
     	return job;
     }
-    //returns the total PCBs in the system between the readyQ and blockedQ
+
+	/**
+	 * returns the total PCBs in the system between the readyQ and blockedQ
+	 */
     public int getTotalPCBs(){
     	int toReturn = (blockedQ.size() + sbq1.size() + sbq2.size()
 		+ sbq3.size() + sbq4.size());
     	return toReturn;
     }
-    public int getRQSize(){
+
+	/**
+	 * @return total size of the readyQ
+	 */
+	public int getRQSize(){
         int sizeRQ = sbq1.size() + sbq2.size() + sbq3.size() + sbq4.size();
         return sizeRQ;
     }    

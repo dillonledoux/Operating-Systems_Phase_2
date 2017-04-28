@@ -27,7 +27,6 @@ public class LogWriter {
 		mem = memIn;
 		sch = schIn;
 		ld = ldIn;
-
 		setupMemStatFile();
 		setupTraceFile();
 	}

@@ -1,10 +1,10 @@
-/*
- * ---Description---
- * The Loader serves to load jobs from the job file and place them
- * in either the readyQ if there is enough free memory space to 
- * accommodate the respective job or add the job to the JobQ until
- * enough space becomes available.
- */
+/**
+  * ---Description---
+  * The Loader serves to load jobs from the job file and place them
+  * in either the readyQ if there is enough free memory space to
+  * accommodate the respective job or add the job to the JobQ until
+  * enough space becomes available.
+  */
 
 import java.io.File;
 import java.util.ArrayList;
@@ -12,26 +12,32 @@ import java.util.Arrays;
 import java.util.Scanner;
 
 public class Loader{
-	
-//		---Class Variables---
 
+	/**
+	 * Class Variables
+	 */
     private File jbX;
 	private Scanner scannerArrivals;
 	private boolean moreJobsInFile = true;
 	private ArrayList<ArrayList<String>> jobQ = new ArrayList<ArrayList<String>>();
-	private int counter = 0;
 
 	SYSTEM system;
 	Mem_manager mem_manager;
 	Scheduler scheduler;
-		
-//		---Constructor---
+
+	/**
+	 * Constructor
+	 *
+	 * Constructs a loader object with the other system objects as
+	 * well as the filename of where the job files is located
+	 * @param strIn		file path of the arrivals file
+	 */
 	public Loader(SYSTEM systemIn, Mem_manager mem_managerIn,
 				  Scheduler schedulerIn, String strIn){
 	    system = systemIn;
 	    mem_manager = mem_managerIn;
 	    scheduler = schedulerIn;
-        File arrivals = new File(strIn);
+        File arrivals = new File(system.getDirLocation()+""+strIn);
 	    try{
 	    	scannerArrivals = new Scanner(arrivals);
 	    }
@@ -41,11 +47,8 @@ public class Loader{
 	    }
 	}
 	
-//		---Object Methods---     
-	
-    public void addToJobQ(ArrayList<String> job){
-     	jobQ.add(job);
-    }
+//		---Object Methods---
+
     /**
      * Reads the job file and returns a job in the form of an ArrayList
      * A scanner scans one line at a time for new jobs, as long as there
@@ -53,10 +56,10 @@ public class Loader{
      * This ArrayList is then converted from that of type String to type
      * integer and it gets returned.
      *
+	 * @return an ArrayList containing parsed job information
      */
     public ArrayList<String> getNextJob(){
     	if(scannerArrivals.hasNextLine() == false){
-
 			moreJobsInFile = false;
     		ArrayList<String> list = new ArrayList<>();
     		list.add("0");
@@ -71,7 +74,6 @@ public class Loader{
         catch(Exception e){
         	stringList.remove(0);
         }
-
         return stringList;
      }
    
@@ -80,8 +82,6 @@ public class Loader{
      * memory to them and add them to the readyQ.  
      */
     public void loadFromJobQ(){
-
-    	counter++;
     	int index = 0;
     	boolean canAllocate;
 		while((mem_manager.getFramesToBeAllocated())<=128
@@ -102,14 +102,12 @@ public class Loader{
     * enough memory becomes available.
     */
     public void loadTasks(){
-
 		loadFromJobQ();
     	boolean canAllocate;
     	ArrayList<String> newJob;
 
 		while((mem_manager.getFramesToBeAllocated())<= 128
 				&& scheduler.getTotalPCBs()<15 && moreJobsInFile ){
-
 			newJob = getNextJob();
     		if((Integer.parseInt(newJob.get(0))!=0)){
     			canAllocate = mem_manager.admit(Integer.parseInt(newJob.get
@@ -128,11 +126,19 @@ public class Loader{
     	}
     }
 
+	/**
+	 * Given a page table and two page addresses, this method
+	 * changes the frame number from page address A to B page
+	 * B and sets the frame number in page A to -1 representing
+	 * no frame allocated.
+	 * @param pgTableAddress	address of the page table
+	 * @param pgNumberToLoad	page number of the new page to load
+	 * @param pgNumberOfToBeReplaced	page number of the current page
+	 *                                  which will be replaced
+	 */
     public void swapPages(int pgTableAddress, int pgNumberToLoad,
 						  int pgNumberOfToBeReplaced){
 
-// backing store if it is dirty and outputting a message to the trace file
-// and loading the new page in the released frame and redefining the page table
 		int frameNumber = mem_manager.getFrameNumberFromPageTable
 				(pgTableAddress, pgNumberOfToBeReplaced);
 		mem_manager.setFrameNumberInPageTable(pgTableAddress,
@@ -141,22 +147,30 @@ public class Loader{
 		mem_manager.setFrameNumberInPageTable(pgTableAddress,
 				pgNumberToLoad, frameNumber);
 		mem_manager.setResidentBit(pgTableAddress, pgNumberToLoad);
-
     }
 
+	/**
+	 * Sets the frame number of a page to be a specified value.  In a
+	 * physical system, this would populate a frame with a specified page.
+	 * @param pgTableAddress	address in the system page table
+	 * @param pgNumber	page number in the job's page table
+	 * @param frame	frame number to assign to the page
+	 */
 	public void loadFrameWithPage(int pgTableAddress, int pgNumber, int frame){
 
     	mem_manager.setFrameNumberInPageTable(pgTableAddress, pgNumber, frame);
 
 	}
-//		---Getters---
+
+
+// --- Getters ---
+	/**
+	 * Class getters which return values
+	 * @return	values of class variables
+	 */
     public boolean hasMoreJobsInFile(){
         return moreJobsInFile;
      }
-
-	public ArrayList<ArrayList<String>> getJobQ(){
-    	return jobQ;
-    }
 
     public int getJobQSize(){
     	return jobQ.size();

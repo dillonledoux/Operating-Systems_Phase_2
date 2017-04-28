@@ -1,17 +1,20 @@
 /**
  * Created by dillonledoux on 4/21/17.
+ *
+ * Custom data structure for the a page entry to the page table
+ * holding the necessary information about the page
  */
 public class Page {
 
     private int vi = 0; // invalid if zero, valid if 1
-    private boolean resident; // false is 0, true is 1
+    private boolean resident;
     private boolean reference;
     private boolean modified;
     private int frameNumber;
-    private static final int MAX_CAPACITY = 256;
 
-  //  private int occupiedSpace = 0;
-
+    /**
+     * Constructor
+     */
     public Page() {
         resident = false;
         reference = false;
@@ -46,37 +49,17 @@ public class Page {
     public void setReference(boolean reference) {
         this.reference = reference;
     }
-
-    public void clearReference(){
-        reference = false;
-    }
-
     public boolean isModified() {
         return modified;
     }
-
     public void setModified() {
         modified = true;
     }
-
-    public void clearModified(){
-        modified = false;
-    }
-
     public int getFrameNumber() {
         return frameNumber;
     }
-
     public void setFrameNumber(int frameNumber) {
         this.frameNumber = frameNumber;
     }
-  /*
-    public int getOccupiedSpace() {
-        return occupiedSpace;
-    }
 
-    public void setOccupiedSpace(int occupiedSpace) {
-        this.occupiedSpace = occupiedSpace;
-    }
-    */
 }
